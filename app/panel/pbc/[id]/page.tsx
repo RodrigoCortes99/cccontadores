@@ -235,7 +235,7 @@ export default function DocumentosPBCPage() {
                     <div className="pageActions">
                       <a
                         className="cc-btn cc-btn--solid"
-                        href={`${process.env.NEXT_PUBLIC_API_URL}${doc.archivo}`}
+                        href={doc.archivo}
                         target="_blank"
                         rel="noreferrer"
                       >
