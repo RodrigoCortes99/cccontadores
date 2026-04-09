@@ -26,34 +26,34 @@ export default function Navbar() {
   return (
     <header className="cc-nav">
       <div className="container cc-nav__inner">
-        <div className="cc-nav__left">
-          <Link href="/" className="cc-brand" aria-label="Ir a inicio">
-            {!logoError ? (
-              <img
-                src="/logo-cc.png"
-                alt="CC Contadores Públicos"
-                className="cc-brand__logo"
-                onError={() => setLogoError(true)}
-              />
-            ) : (
-              <div className="cc-brand__fallback">CC</div>
-            )}
+        <Link href="/" className="cc-brand" aria-label="Ir a inicio">
+          {!logoError ? (
+            <img
+              src="/logo-cc.png"
+              alt="CC Contadores Públicos"
+              className="cc-brand__logo"
+              onError={() => setLogoError(true)}
+            />
+          ) : (
+            <div className="cc-brand__fallback">CC</div>
+          )}
 
+          <div className="cc-brand__text">
             <span className="cc-brand__titleLong">
               CC CONTADORES PÚBLICOS, AUDITORES Y CONSULTORES S.C.
             </span>
-          </Link>
-        </div>
+          </div>
+        </Link>
 
-        <nav className="cc-nav__center cc-links" aria-label="Navegación principal">
+        <nav className="cc-links" aria-label="Navegación principal">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
 
             return (
               <Link
                 key={item.href}
-                className={`cc-link ${isActive ? "cc-link--active" : ""}`}
                 href={item.href}
+                className={`cc-link ${isActive ? "cc-link--active" : ""}`}
               >
                 {item.label}
               </Link>
@@ -61,7 +61,7 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="cc-nav__right">
+        <div className="cc-nav__actions">
           <button
             type="button"
             className="cc-btn cc-btn--solid cc-btn--navPortal"
