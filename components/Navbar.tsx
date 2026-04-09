@@ -25,18 +25,20 @@ export default function Navbar() {
   return (
     <header className="cc-nav cc-nav--website">
       <div className="container cc-nav__inner cc-nav__inner--website">
-        <Link href="/" className="cc-brand cc-brand--website" aria-label="Ir a inicio">
-          <img
-            src="/logo-cc.png"
-            alt="CC Contadores Públicos"
-            className="cc-brand__logo"
-          />
-          <span className="cc-brand__titleLong">
-            CC CONTADORES PÚBLICOS, AUDITORES Y CONSULTORES S.C.
-          </span>
-        </Link>
+        <div className="cc-nav__left">
+          <Link href="/" className="cc-brand cc-brand--website" aria-label="Ir a inicio">
+            <img
+              src="/logo-cc.png"
+              alt="CC Contadores Públicos"
+              className="cc-brand__logo"
+            />
+            <span className="cc-brand__titleLong">
+              CC CONTADORES PÚBLICOS, AUDITORES Y CONSULTORES S.C.
+            </span>
+          </Link>
+        </div>
 
-        <nav className="cc-links cc-links--website" aria-label="Navegación principal">
+        <nav className="cc-nav__center cc-links cc-links--website" aria-label="Navegación principal">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
 
@@ -52,7 +54,7 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="cc-actions cc-actions--website">
+        <div className="cc-nav__right cc-actions cc-actions--website">
           <button
             type="button"
             className="cc-btn cc-btn--solid cc-btn--navPortal"
