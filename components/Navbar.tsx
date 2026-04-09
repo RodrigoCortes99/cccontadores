@@ -16,6 +16,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [hasSession, setHasSession] = useState(false);
+  const [logoError, setLogoError] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("access");
@@ -23,29 +24,35 @@ export default function Navbar() {
   }, [pathname]);
 
   return (
-    <header className="cc-nav cc-nav--website">
-      <div className="container cc-nav__inner cc-nav__inner--website">
+    <header className="cc-nav">
+      <div className="container cc-nav__inner">
         <div className="cc-nav__left">
-          <Link href="/" className="cc-brand cc-brand--website" aria-label="Ir a inicio">
-            <img
-              src="/logo-cc.png"
-              alt="CC Contadores Públicos"
-              className="cc-brand__logo"
-            />
+          <Link href="/" className="cc-brand" aria-label="Ir a inicio">
+            {!logoError ? (
+              <img
+                src="/logo-cc.png"
+                alt="CC Contadores Públicos"
+                className="cc-brand__logo"
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+              <div className="cc-brand__fallback">CC</div>
+            )}
+
             <span className="cc-brand__titleLong">
               CC CONTADORES PÚBLICOS, AUDITORES Y CONSULTORES S.C.
             </span>
           </Link>
         </div>
 
-        <nav className="cc-nav__center cc-links cc-links--website" aria-label="Navegación principal">
+        <nav className="cc-nav__center cc-links" aria-label="Navegación principal">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
 
             return (
               <Link
                 key={item.href}
-                className={`cc-link cc-link--website ${isActive ? "cc-link--active" : ""}`}
+                className={`cc-link ${isActive ? "cc-link--active" : ""}`}
                 href={item.href}
               >
                 {item.label}
@@ -54,7 +61,7 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="cc-nav__right cc-actions cc-actions--website">
+        <div className="cc-nav__right">
           <button
             type="button"
             className="cc-btn cc-btn--solid cc-btn--navPortal"
