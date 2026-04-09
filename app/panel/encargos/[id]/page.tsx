@@ -17,6 +17,7 @@ type SolicitudPBC = {
   estatus_display: string;
   fecha_compromiso: string | null;
   fecha_recibido: string | null;
+  observaciones_revision: string;
   creado_en: string;
 };
 
@@ -41,6 +42,9 @@ export default function EncargoDetallePage() {
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+
+  const [estatusEdit, setEstatusEdit] = useState<Record<number, string>>({});
+  const [observacionesEdit, setObservacionesEdit] = useState<Record<number, string>>({});
 
   const isClientUser = userInfo?.role === "client";
 
@@ -102,6 +106,17 @@ export default function EncargoDetallePage() {
 
       const data = await res.json();
       setSolicitudes(data);
+
+      const nuevosEstatus: Record<number, string> = {};
+      const nuevasObservaciones: Record<number, string> = {};
+
+      data.forEach((solicitud: SolicitudPBC) => {
+        nuevosEstatus[solicitud.id] = solicitud.estatus;
+        nuevasObservaciones[solicitud.id] = solicitud.observaciones_revision || "";
+      });
+
+      setEstatusEdit(nuevosEstatus);
+      setObservacionesEdit(nuevasObservaciones);
     } catch {
       setError("Ocurrió un error al conectar con el servidor.");
     } finally {
@@ -132,7 +147,7 @@ export default function EncargoDetallePage() {
     }
   }, [id, router]);
 
-  async function handleCambiarEstatus(solicitudId: number, nuevoEstatus: string) {
+  async function handleGuardarRevision(solicitudId: number) {
     setError("");
     setMensaje("");
     setUpdatingId(solicitudId);
@@ -145,6 +160,9 @@ export default function EncargoDetallePage() {
         return;
       }
 
+      const nuevoEstatus = estatusEdit[solicitudId];
+      const nuevaObservacion = observacionesEdit[solicitudId] || "";
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/pbc/${solicitudId}/estatus/`,
         {
@@ -155,6 +173,7 @@ export default function EncargoDetallePage() {
           },
           body: JSON.stringify({
             estatus: nuevoEstatus,
+            observaciones_revision: nuevaObservacion,
           }),
         }
       );
@@ -169,14 +188,14 @@ export default function EncargoDetallePage() {
       }
 
       if (!res.ok) {
-        setError(data.detail || "No fue posible actualizar el estatus.");
+        setError(data.detail || "No fue posible actualizar la revisión.");
         return;
       }
 
-      setMensaje("Estatus actualizado correctamente.");
+      setMensaje("Revisión actualizada correctamente.");
       await fetchSolicitudes();
     } catch {
-      setError("Ocurrió un error al actualizar el estatus.");
+      setError("Ocurrió un error al actualizar la revisión.");
     } finally {
       setUpdatingId(null);
     }
@@ -195,7 +214,7 @@ export default function EncargoDetallePage() {
             <p className="pageLead">
               {isClientUser
                 ? "Revisa las solicitudes de información de este encargo y consulta sus documentos."
-                : "Revisa las solicitudes de información asociadas a este encargo y actualiza su seguimiento."}
+                : "Revisa las solicitudes, cambia el estatus y agrega observaciones para el cliente."}
             </p>
           </div>
         </section>
@@ -220,7 +239,7 @@ export default function EncargoDetallePage() {
                     <h2>{solicitud.titulo}</h2>
 
                     <p>
-                      <strong>Estatus:</strong> {solicitud.estatus_display}
+                      <strong>Estatus actual:</strong> {solicitud.estatus_display}
                     </p>
 
                     {solicitud.descripcion && (
@@ -241,44 +260,65 @@ export default function EncargoDetallePage() {
                       </p>
                     )}
 
+                    {solicitud.observaciones_revision && (
+                      <p>
+                        <strong>Observaciones del auditor:</strong>{" "}
+                        {solicitud.observaciones_revision}
+                      </p>
+                    )}
+
                     {!isClientUser && (
                       <div style={{ marginTop: "14px" }}>
-                        <label
-                          htmlFor={`estatus-${solicitud.id}`}
-                          style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}
-                        >
-                          Cambiar estatus
-                        </label>
+                        <div className="loginField">
+                          <label htmlFor={`estatus-${solicitud.id}`}>Cambiar estatus</label>
+                          <select
+                            id={`estatus-${solicitud.id}`}
+                            value={estatusEdit[solicitud.id] || solicitud.estatus}
+                            onChange={(e) =>
+                              setEstatusEdit((prev) => ({
+                                ...prev,
+                                [solicitud.id]: e.target.value,
+                              }))
+                            }
+                          >
+                            <option value="pendiente">Pendiente</option>
+                            <option value="recibido">Recibido</option>
+                            <option value="aprobado">Aprobado</option>
+                            <option value="incompleto">Incompleto</option>
+                          </select>
+                        </div>
 
-                        <select
-                          id={`estatus-${solicitud.id}`}
-                          defaultValue={solicitud.estatus}
-                          onChange={(e) =>
-                            handleCambiarEstatus(solicitud.id, e.target.value)
-                          }
+                        <div className="loginField">
+                          <label htmlFor={`observaciones-${solicitud.id}`}>
+                            Observaciones de revisión
+                          </label>
+                          <textarea
+                            id={`observaciones-${solicitud.id}`}
+                            rows={4}
+                            className="uploadTextarea"
+                            placeholder="Ej. Falta XML, el PDF no corresponde al periodo o falta firma."
+                            value={observacionesEdit[solicitud.id] || ""}
+                            onChange={(e) =>
+                              setObservacionesEdit((prev) => ({
+                                ...prev,
+                                [solicitud.id]: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+
+                        <button
+                          type="button"
+                          className="loginButton"
+                          onClick={() => handleGuardarRevision(solicitud.id)}
                           disabled={updatingId === solicitud.id}
-                          style={{
-                            width: "100%",
-                            padding: "12px 14px",
-                            borderRadius: "10px",
-                            border: "1px solid #d1d5db",
-                            background: "#fff",
-                            marginBottom: "12px",
-                          }}
                         >
-                          <option value="pendiente">Pendiente</option>
-                          <option value="recibido">Recibido</option>
-                          <option value="aprobado">Aprobado</option>
-                          <option value="incompleto">Incompleto</option>
-                        </select>
-
-                        {updatingId === solicitud.id && (
-                          <p className="pageText">Actualizando estatus...</p>
-                        )}
+                          {updatingId === solicitud.id ? "Guardando..." : "Guardar revisión"}
+                        </button>
                       </div>
                     )}
 
-                    <div className="pageActions">
+                    <div className="pageActions" style={{ marginTop: "14px" }}>
                       <Link
                         className="cc-btn cc-btn--solid"
                         href={`/panel/pbc/${solicitud.id}`}
