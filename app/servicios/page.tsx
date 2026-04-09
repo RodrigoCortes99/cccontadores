@@ -15,14 +15,15 @@ export default function ServiciosPage() {
 
         <section className="sectionBlock lightSection">
           <div className="container">
-            <div className="specialtiesIntro">
+            <div className="specialtiesIntro specialtiesIntro--fixed">
               <div className="specialtiesIntro__text">
                 <h2>Soluciones expertas para cada necesidad</h2>
                 <p>
-                  Acompañamos a empresas y profesionales con servicios especializados que
-                  generan claridad, cumplimiento y mejores decisiones financieras.
+                  Acompañamos a empresas y profesionales con servicios especializados
+                  que generan claridad, cumplimiento y mejores decisiones financieras.
                 </p>
               </div>
+
               <div className="specialtiesIntro__image" />
             </div>
           </div>
@@ -34,8 +35,10 @@ export default function ServiciosPage() {
               <article className="specialtyCard">
                 <div className="specialtyCard__header">
                   <div className="specialtyCard__icon">◫</div>
-                  <div className="specialtyCard__number">01</div>
-                  <h3>Contabilidad y finanzas</h3>
+                  <div>
+                    <div className="specialtyCard__number">01</div>
+                    <h3>Contabilidad y finanzas</h3>
+                  </div>
                 </div>
                 <span className="specialtyCard__line" />
                 <p>
@@ -47,8 +50,10 @@ export default function ServiciosPage() {
               <article className="specialtyCard">
                 <div className="specialtyCard__header">
                   <div className="specialtyCard__icon">◫</div>
-                  <div className="specialtyCard__number">02</div>
-                  <h3>Asesoría Fiscal</h3>
+                  <div>
+                    <div className="specialtyCard__number">02</div>
+                    <h3>Asesoría Fiscal</h3>
+                  </div>
                 </div>
                 <span className="specialtyCard__line" />
                 <p>
@@ -60,13 +65,15 @@ export default function ServiciosPage() {
               <article className="specialtyCard">
                 <div className="specialtyCard__header">
                   <div className="specialtyCard__icon">◫</div>
-                  <div className="specialtyCard__number">03</div>
-                  <h3>Auditoría y Control</h3>
+                  <div>
+                    <div className="specialtyCard__number">03</div>
+                    <h3>Auditoría y Control</h3>
+                  </div>
                 </div>
                 <span className="specialtyCard__line" />
                 <p>
-                  Evaluamos tus procesos con objetividad para fortalecer la
-                  transparencia y reducir riesgos.
+                  Evaluamos tus procesos con objetividad para fortalecer la transparencia
+                  y reducir riesgos.
                 </p>
               </article>
             </div>

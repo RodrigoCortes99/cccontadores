@@ -11,9 +11,7 @@ export default function Home() {
           <div className="heroBanner__overlay" />
           <div className="container heroBanner__content">
             <h1>Auditoría y consultoría con respaldo profesional</h1>
-            <p>
-              Comprometidos con la ética, calidad y el éxito de tu negocio.
-            </p>
+            <p>Comprometidos con la ética, calidad y el éxito de tu negocio.</p>
             <div className="heroBanner__actions">
               <Link href="/contacto" className="cc-btn cc-btn--solid">
                 Solicitar asesoría
@@ -31,8 +29,8 @@ export default function Home() {
               Soluciones integrales para el crecimiento financiero
             </h2>
             <p className="sectionMainText">
-              En <strong>CC CONTADORES PÚBLICOS, AUDITORES Y CONSULTORES S.C.</strong>, nuestra
-              misión es apoyar el desarrollo económico y humano de nuestros clientes,
+              En <strong>CC CONTADORES PÚBLICOS, AUDITORES Y CONSULTORES S.C.</strong>,
+              nuestra misión es apoyar el desarrollo económico y humano de nuestros clientes,
               guiándonos por principios de ética, calidad y compromiso.
             </p>
 
@@ -96,7 +94,7 @@ export default function Home() {
               </div>
 
               <div className="approachPanel__actions">
-                <Link href="/nosotros" className="cc-btn cc-btn--solid">
+                <Link href="/acerca-de" className="cc-btn cc-btn--solid">
                   Conocer más
                 </Link>
               </div>
@@ -171,29 +169,15 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="sectionBlock lightSection ctaCenterBlock">
-          <div className="container">
-            <h2 className="sectionMainTitle">Dedicación y confianza en cada solución brindada</h2>
-            <p className="sectionMainText narrowText">
-              Descubre cómo nuestros servicios pueden transformar tu negocio y contáctanos hoy.
-            </p>
-            <div className="centerActions">
-              <Link href="/contacto" className="cc-btn cc-btn--solid">
-                Más información
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="sectionBlock portalSection">
+        <section className="sectionBlock portalSection portalSection--higher">
           <div className="container">
             <div className="portalCard">
               <div>
                 <p className="portalCard__kicker">Portal privado</p>
                 <h2>Acceso al panel documental</h2>
                 <p>
-                  Ingresa al sistema para consultar encargos, revisar solicitudes PBC y cargar
-                  evidencia documental.
+                  Ingresa al sistema para consultar encargos, revisar solicitudes PBC
+                  y cargar evidencia documental.
                 </p>
               </div>
 
@@ -205,6 +189,20 @@ export default function Home() {
                   Ir al panel
                 </Link>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="sectionBlock lightSection ctaCenterBlock">
+          <div className="container">
+            <h2 className="sectionMainTitle">Dedicación y confianza en cada solución brindada</h2>
+            <p className="sectionMainText narrowText">
+              Descubre cómo nuestros servicios pueden transformar tu negocio y contáctanos hoy.
+            </p>
+            <div className="centerActions">
+              <Link href="/contacto" className="cc-btn cc-btn--solid">
+                Más información
+              </Link>
             </div>
           </div>
         </section>

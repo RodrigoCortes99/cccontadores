@@ -51,8 +51,16 @@ export default function ContactoPage() {
           </div>
         </section>
 
-        <section className="mapSection">
-          <div className="mapSection__image" />
+        <section className="mapSection mapSection--real">
+          <iframe
+            title="Ubicación CC Contadores"
+            src="https://www.google.com/maps?q=C%20Jorullo%2095,%20Aguacatal,%2091133%20Xalapa-Enríquez,%20Ver.&output=embed"
+            width="100%"
+            height="620"
+            style={{ border: 0 }}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
         </section>
       </main>
       <Footer />

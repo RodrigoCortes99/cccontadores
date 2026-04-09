@@ -1944,3 +1944,176 @@ body{
     display: none;
   }
 }
+/* ===== precise fixes ===== */
+
+.cc-nav--website{
+  border-top: 4px solid #4d8df7;
+  background: rgba(255,255,255,.97);
+  backdrop-filter: blur(8px);
+}
+
+.cc-nav__inner--website{
+  min-height: 70px;
+  gap: 20px;
+}
+
+.cc-brand__logo{
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  display: block;
+}
+
+.cc-brand__titleLong{
+  color: #243b69;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cc-links--website{
+  gap: 22px;
+}
+
+.cc-link--website{
+  font-size: 14px;
+  font-weight: 700;
+  color: #243b69;
+}
+
+.cc-actions--website{
+  margin-left: 8px;
+}
+
+.cc-btn--navPortal{
+  height: 40px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.portalSection--higher{
+  padding-top: 10px;
+  padding-bottom: 30px;
+}
+
+.portalCard{
+  max-width: 1060px;
+  margin: 0 auto;
+}
+
+.aboutSplitCard--fixed{
+  max-width: 1100px;
+  margin: 0 auto;
+  align-items: stretch;
+}
+
+.aboutSplitCard__content{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.specialtiesIntro--fixed{
+  max-width: 1060px;
+  margin: 0 auto;
+  align-items: center;
+}
+
+.specialtiesIntro__text{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.specialtiesIntro__text h2{
+  margin-top: 0;
+}
+
+.specialtyCard__header{
+  align-items: start;
+}
+
+.specialtyCard__header > div:last-child{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.specialtyCard__number{
+  margin-bottom: 8px;
+}
+
+.contactInfoBox{
+  background: #f2f2f2;
+}
+
+.mapSection--real{
+  width: 100%;
+  line-height: 0;
+}
+
+.siteFooter{
+  background: #183b7a;
+  color: rgba(255,255,255,.95);
+  padding: 18px 0;
+}
+
+.siteFooter__inner{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.siteFooter__brand{
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.siteFooter__contact{
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 1100px){
+  .cc-brand__titleLong{
+    font-size: 13px;
+    white-space: normal;
+    max-width: 360px;
+  }
+}
+
+@media (max-width: 980px){
+  .cc-links--website{
+    display: none;
+  }
+
+  .cc-brand__logo{
+    width: 48px;
+    height: 48px;
+  }
+
+  .aboutSplitCard--fixed,
+  .specialtiesIntro--fixed,
+  .portalCard{
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 640px){
+  .siteFooter__inner{
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cc-brand__titleLong{
+    max-width: 220px;
+    font-size: 12px;
+  }
+}
