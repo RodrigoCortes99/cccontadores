@@ -24,7 +24,7 @@ export default function AcercaDePage() {
                 <p className="smallKicker">Acerca de</p>
                 <h2>¿Quiénes somos?</h2>
 
-                <p>
+                <p style={{ textAlign: "justify" }}>
                   En <strong>CC Contadores Públicos, Auditores y Consultores S.C.</strong>,
                   somos un despacho especializado en servicios contables, fiscales y financieros.
                   Nuestro objetivo es brindar asesoría profesional que permita a empresas y
@@ -56,7 +56,7 @@ export default function AcercaDePage() {
               <article>
                 <h3>Visión</h3>
                 <span className="titleLine" />
-                <p>
+                <p style={{ textAlign: "justify" }}>
                   Posicionarnos como un despacho contable de referencia a nivel regional,
                   reconocido por la confianza, la precisión y el compromiso con nuestros clientes.
                   Buscamos ser aliados estratégicos en el crecimiento de cada empresa, adaptándonos
@@ -68,7 +68,7 @@ export default function AcercaDePage() {
               <article>
                 <h3>Misión</h3>
                 <span className="titleLine" />
-                <p>
+                <p style={{ textAlign: "justify" }}>
                   Brindar servicios contables, fiscales y financieros con un enfoque profesional,
                   ético y personalizado, acompañando a nuestros clientes en la toma de decisiones clave.
                   Nos enfocamos en ofrecer claridad, cumplimiento normativo y estrategias que optimicen

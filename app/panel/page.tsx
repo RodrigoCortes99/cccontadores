@@ -47,7 +47,7 @@ export default function PanelPage() {
 
   const [nombre, setNombre] = useState("");
   const [cliente, setCliente] = useState("");
-  const [tipo, setTipo] = useState("financiera");
+  const [tipo, setTipo] = useState("asesoria");
   const [estatus, setEstatus] = useState("planeacion");
   const [periodoInicio, setPeriodoInicio] = useState("");
   const [periodoFin, setPeriodoFin] = useState("");
@@ -234,7 +234,7 @@ export default function PanelPage() {
       setMensaje("Encargo creado correctamente.");
       setNombre("");
       setCliente("");
-      setTipo("financiera");
+      setTipo("asesoria");
       setEstatus("planeacion");
       setPeriodoInicio("");
       setPeriodoFin("");
@@ -278,7 +278,7 @@ export default function PanelPage() {
                     <input
                       id="nombre"
                       type="text"
-                      placeholder="Ej. Auditoría Financiera 2026"
+                      placeholder="Ej. Auditoría Gubernamental 2026"
                       value={nombre}
                       onChange={(e) => setNombre(e.target.value)}
                       required
@@ -309,11 +309,23 @@ export default function PanelPage() {
                       value={tipo}
                       onChange={(e) => setTipo(e.target.value)}
                     >
-                      <option value="financiera">Auditoría financiera</option>
-                      <option value="interna">Auditoría interna</option>
-                      <option value="fiscal">Auditoría fiscal (SAT)</option>
-                      <option value="iso">Auditoría ISO</option>
-                      <option value="personalizada">Personalizada</option>
+                      <option value="seguro_social">
+                        Auditoría para efectos del Seguro Social
+                      </option>
+                      <option value="impuestos_estatales">
+                        Auditoría de Impuestos Estatales
+                      </option>
+                      <option value="gubernamental">
+                        Auditoría Gubernamental
+                      </option>
+                      <option value="contabilidad_financiera">
+                        Contabilidad Financiera
+                      </option>
+                      <option value="precios_transferencia">
+                        Precios de Transferencia
+                      </option>
+                      <option value="asesoria">Asesoría</option>
+                      <option value="compliance">Compliance</option>
                     </select>
                   </div>
 
