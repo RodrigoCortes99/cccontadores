@@ -2,17 +2,17 @@ const cards = [
   {
     title: "Consultoría Fiscal",
     text: "Asesoría personalizada para optimizar tu carga tributaria.",
-    img: "/service-1.jpg",
+    img: "/home-service-fiscal.jpg",
   },
   {
     title: "Auditoría Financiera",
     text: "Examina y fortalece la transparencia de tus operaciones.",
-    img: "/service-2.jpg",
+    img: "/home-service-auditoria.jpg",
   },
   {
     title: "Cumplimiento Corporativo",
     text: "Garantizamos que tu empresa cumpla con las normativas vigentes.",
-    img: "/service-3.jpg",
+    img: "/home-service-corporativo.jpg",
   },
 ];
 
