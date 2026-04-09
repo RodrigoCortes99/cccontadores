@@ -1,58 +1,58 @@
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export default function ContactoPage() {
   return (
     <>
       <Navbar />
-      <main className="page">
-        <section className="pageHero">
-          <div className="container">
-            <p className="pageKicker">CONTACTO</p>
-            <h1 className="pageTitle">Estamos listos para atenderte</h1>
-            <p className="pageLead">
-              Si deseas una asesoría profesional en temas contables, fiscales o de auditoría,
-              nuestro equipo está disponible para brindarte atención personalizada.
-            </p>
+      <main className="sitePage">
+        <section className="heroBanner heroBanner--contact">
+          <div className="heroBanner__overlay" />
+          <div className="container heroBanner__content heroBanner__content--narrow">
+            <h1>Contáctanos</h1>
+            <p>Servicios contables y fiscales que impulsan el crecimiento de tu empresa.</p>
           </div>
         </section>
 
-        <section className="pageSection">
-          <div className="container twoCols">
-            <div className="contentCard">
-              <h2>Medios de contacto</h2>
-              <p><strong>Teléfono de oficina:</strong> 22 88 40 88 00</p>
-              <p><strong>WhatsApp:</strong> 22 84 03 52 73</p>
-              <p><strong>Correo electrónico:</strong> mercadeo@db-system.com</p>
-              <p><strong>Horario de atención:</strong> Lunes a viernes de 9:00 a.m. a 6:00 p.m.</p>
-            </div>
+        <section className="sectionBlock lightSection">
+          <div className="container">
+            <h2 className="sectionMainTitle">Creamos la estrategia ideal para ti.</h2>
 
-            <div className="contentCard">
-              <h2>Atención profesional</h2>
-              <p>
-                Atendemos consultas relacionadas con auditoría financiera, consultoría fiscal,
-                cumplimiento corporativo y fortalecimiento de procesos administrativos y documentales.
-              </p>
-              <p>
-                Nuestro objetivo es ofrecer respuestas claras, útiles y alineadas a las necesidades
-                reales de cada organización.
-              </p>
+            <div className="contactGrid">
+              <div className="contactCard">
+                <h3>Déjanos un mensaje</h3>
+                <p>Estamos listos para escuchar tus necesidades y apoyarte.</p>
 
-              <div className="pageActions">
-                <a className="cc-btn cc-btn--solid" href="tel:+522288408800">
-                  Llamar ahora
-                </a>
-                <a
-                  className="cc-btn cc-btn--ghost"
-                  href="https://wa.me/522284035273"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Enviar WhatsApp
-                </a>
+                <form className="contactForm">
+                  <div className="contactForm__row">
+                    <input type="text" placeholder="Nombre completo*" />
+                    <input type="text" placeholder="Teléfono*" />
+                  </div>
+
+                  <input type="email" placeholder="Correo electrónico*" />
+                  <textarea placeholder="Escribe tu mensaje aquí *" rows={5} />
+                  <button type="button" className="cc-btn cc-btn--solid">
+                    Enviar mensaje
+                  </button>
+                </form>
+              </div>
+
+              <div className="contactCard">
+                <h3>Datos de contacto</h3>
+
+                <div className="contactInfoBox">
+                  <p>📞 22 88 40 88 00</p>
+                  <p>✉ contacto@cc-contadorespublicos.com</p>
+                  <p>📍 C Jorullo 95, Aguacatal, 91133 Xalapa-Enríquez, Ver.</p>
+                  <p>🟢 22 84 03 52 73</p>
+                </div>
               </div>
             </div>
           </div>
+        </section>
+
+        <section className="mapSection">
+          <div className="mapSection__image" />
         </section>
       </main>
       <Footer />

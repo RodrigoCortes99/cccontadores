@@ -1,71 +1,82 @@
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export default function ServiciosPage() {
   return (
     <>
       <Navbar />
-      <main className="page">
-        <section className="pageHero">
-          <div className="container">
-            <p className="pageKicker">SERVICIOS</p>
-            <h1 className="pageTitle">Servicios diseñados para fortalecer tu operación</h1>
-            <p className="pageLead">
-              Brindamos soluciones profesionales orientadas a la transparencia, el cumplimiento
-              normativo y el crecimiento sostenible de cada organización.
-            </p>
+      <main className="sitePage">
+        <section className="heroBanner heroBanner--specialties">
+          <div className="heroBanner__overlay" />
+          <div className="container heroBanner__content heroBanner__content--narrow">
+            <h1>Áreas de especialización</h1>
           </div>
         </section>
 
-        <section className="pageSection">
-          <div className="container cardGrid">
-            <article className="serviceBox">
-              <h2>Auditoría financiera</h2>
-              <p>
-                Revisión profesional de información financiera, controles y evidencia documental
-                para fortalecer la transparencia y confiabilidad de la operación.
-              </p>
-            </article>
+        <section className="sectionBlock lightSection">
+          <div className="container">
+            <div className="specialtiesIntro">
+              <div className="specialtiesIntro__text">
+                <h2>Soluciones expertas para cada necesidad</h2>
+                <p>
+                  Acompañamos a empresas y profesionales con servicios especializados que
+                  generan claridad, cumplimiento y mejores decisiones financieras.
+                </p>
+              </div>
+              <div className="specialtiesIntro__image" />
+            </div>
+          </div>
+        </section>
 
-            <article className="serviceBox">
-              <h2>Consultoría fiscal</h2>
-              <p>
-                Asesoría para el cumplimiento de obligaciones tributarias, prevención de riesgos y
-                mejora de procesos en materia fiscal.
-              </p>
-            </article>
+        <section className="specialtiesPanelWrap">
+          <div className="container">
+            <div className="specialtiesCards">
+              <article className="specialtyCard">
+                <div className="specialtyCard__header">
+                  <div className="specialtyCard__icon">◫</div>
+                  <div className="specialtyCard__number">01</div>
+                  <h3>Contabilidad y finanzas</h3>
+                </div>
+                <span className="specialtyCard__line" />
+                <p>
+                  Organizamos tu información financiera para una gestión clara,
+                  eficiente y orientada a resultados.
+                </p>
+              </article>
 
-            <article className="serviceBox">
-              <h2>Cumplimiento corporativo</h2>
-              <p>
-                Acompañamiento en el fortalecimiento del cumplimiento normativo, control interno y
-                documentación de soporte.
-              </p>
-            </article>
+              <article className="specialtyCard">
+                <div className="specialtyCard__header">
+                  <div className="specialtyCard__icon">◫</div>
+                  <div className="specialtyCard__number">02</div>
+                  <h3>Asesoría Fiscal</h3>
+                </div>
+                <span className="specialtyCard__line" />
+                <p>
+                  Cumple correctamente con tus obligaciones fiscales y optimiza
+                  tu carga tributaria con estrategias seguras.
+                </p>
+              </article>
 
-            <article className="serviceBox">
-              <h2>Control documental</h2>
-              <p>
-                Organización, seguimiento y validación de evidencia para procesos de auditoría,
-                revisión y atención de requerimientos.
-              </p>
-            </article>
+              <article className="specialtyCard">
+                <div className="specialtyCard__header">
+                  <div className="specialtyCard__icon">◫</div>
+                  <div className="specialtyCard__number">03</div>
+                  <h3>Auditoría y Control</h3>
+                </div>
+                <span className="specialtyCard__line" />
+                <p>
+                  Evaluamos tus procesos con objetividad para fortalecer la
+                  transparencia y reducir riesgos.
+                </p>
+              </article>
+            </div>
 
-            <article className="serviceBox">
-              <h2>Asesoría administrativa</h2>
-              <p>
-                Apoyo en la mejora de procesos administrativos, reducción de riesgos y desarrollo
-                de prácticas de mayor control.
-              </p>
-            </article>
-
-            <article className="serviceBox">
-              <h2>Atención especializada</h2>
-              <p>
-                Cada servicio se adapta a la realidad de la organización, con enfoque técnico,
-                práctico y orientado a resultados.
-              </p>
-            </article>
+            <div className="specialtiesBottomBar">
+              <div className="specialtiesBottomBar__item">Respuesta rápida y oportuna.</div>
+              <div className="specialtiesBottomBar__item">Confidencialidad 100% garantizada</div>
+              <div className="specialtiesBottomBar__item">Atención personalizada</div>
+              <div className="specialtiesBottomBar__item">Estamos listos para impulsar tu crecimiento.</div>
+            </div>
           </div>
         </section>
       </main>

@@ -1,65 +1,90 @@
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
+import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export default function AcercaDePage() {
   return (
     <>
       <Navbar />
-      <main className="page">
-        <section className="pageHero">
-          <div className="container">
-            <p className="pageKicker">ACERCA DE</p>
-            <h1 className="pageTitle">Respaldo profesional para decisiones con mayor certeza</h1>
-            <p className="pageLead">
-              En CC Contadores Públicos, Auditores y Consultores S.C. trabajamos con un enfoque
-              basado en la ética, la calidad técnica y el compromiso con cada cliente, ofreciendo
-              soluciones confiables para fortalecer su operación financiera, fiscal y administrativa.
-            </p>
+      <main className="sitePage">
+        <section className="heroBanner heroBanner--about">
+          <div className="heroBanner__overlay" />
+          <div className="container heroBanner__content heroBanner__content--narrow">
+            <h1>Nuestro compromiso es acompañarte con asesoría contable, fiscal y financiera confiable.</h1>
           </div>
         </section>
 
-        <section className="pageSection">
-          <div className="container twoCols">
-            <div className="contentCard">
-              <h2>Quiénes somos</h2>
-              <p>
-                Somos una firma especializada en auditoría, consultoría y cumplimiento, integrada
-                por profesionales comprometidos con generar confianza y valor en cada proyecto.
-              </p>
-              <p>
-                Nuestro trabajo está orientado a brindar claridad, orden y respaldo técnico a
-                empresas del sector privado, así como a organismos e instituciones del sector público.
-              </p>
+        <section className="sectionBlock lightSection">
+          <div className="container">
+            <div className="aboutSplitCard">
+              <div className="aboutSplitCard__content">
+                <p className="smallKicker">Acerca de</p>
+                <h2>¿Quiénes somos?</h2>
+
+                <p>
+                  En <strong>CC Contadores Públicos, Auditores y Consultores S.C.</strong>, somos
+                  un despacho especializado en servicios contables, fiscales y financieros.
+                  Nuestro objetivo es brindar asesoría profesional que permita a empresas y
+                  emprendedores tomar decisiones informadas, cumplir con sus obligaciones fiscales
+                  y fortalecer su crecimiento en un entorno empresarial cada vez más dinámico.
+                </p>
+
+                <h3>
+                  Brindamos servicios profesionales de la más alta calidad en material contable
+                  fiscal y consultoría de negocio
+                </h3>
+
+                <ul className="checkList">
+                  <li>Honestidad</li>
+                  <li>Integridad</li>
+                  <li>Ética profesional</li>
+                  <li>Innovación</li>
+                </ul>
+
+                <Link href="/contacto" className="cc-btn cc-btn--solid">
+                  Contáctanos
+                </Link>
+              </div>
+
+              <div className="aboutSplitCard__image" />
             </div>
 
-            <div className="contentCard">
-              <h2>Nuestra visión</h2>
-              <p>
-                Aspiramos a ser una firma de referencia por la calidad de nuestros servicios, la
-                integridad de nuestros procesos y la capacidad de acompañar a nuestros clientes en
-                sus decisiones más importantes.
-              </p>
-              <p>
-                Creemos en relaciones profesionales duraderas, construidas con confianza,
-                transparencia y resultados.
-              </p>
-            </div>
+            <div className="visionMissionGrid">
+              <article>
+                <h3>Visión</h3>
+                <span className="titleLine" />
+                <p>
+                  Posicionarnos como un despacho contable de referencia a nivel regional,
+                  reconocido por la confianza, la precisión y el compromiso con nuestros clientes.
+                  Buscamos ser aliados estratégicos en el crecimiento de cada empresa, adaptándonos
+                  a los cambios del entorno y aportando soluciones financieras que generen
+                  estabilidad y proyección a largo plazo.
+                </p>
+              </article>
 
-            <div className="contentCard">
-              <h2>Nuestra misión</h2>
-              <p>
-                Brindar soluciones contables, fiscales y de auditoría que permitan a nuestros
-                clientes operar con mayor seguridad, cumplimiento normativo y eficiencia.
-              </p>
+              <article>
+                <h3>Misión</h3>
+                <span className="titleLine" />
+                <p>
+                  Brindar servicios contables, fiscales y financieros con un enfoque profesional,
+                  ético y personalizado, acompañando a nuestros clientes en la toma de decisiones
+                  clave. Nos enfocamos en ofrecer claridad, cumplimiento normativo y estrategias
+                  que optimicen la gestión de sus recursos.
+                </p>
+              </article>
             </div>
+          </div>
+        </section>
 
-            <div className="contentCard">
-              <h2>Nuestros valores</h2>
-              <p>
-                Ética profesional, calidad técnica, responsabilidad, confidencialidad y compromiso
-                con la mejora continua.
-              </p>
-            </div>
+        <section className="bottomBlueCta">
+          <div className="container">
+            <h2>Impulsa tu empresa con respaldo financiero profesional</h2>
+            <p>
+              Te acompañamos con soluciones contables y fiscales diseñadas para crecer contigo.
+            </p>
+            <Link href="/contacto" className="cc-btn cc-btn--ghost homeWhiteBtn">
+              Contáctanos
+            </Link>
           </div>
         </section>
       </main>
