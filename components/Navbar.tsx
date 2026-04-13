@@ -23,6 +23,13 @@ export default function Navbar() {
     setHasSession(!!token);
   }, [pathname]);
 
+  function handleLogout() {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    setHasSession(false);
+    router.push("/login");
+  }
+
   return (
     <header className="cc-nav">
       <div className="container cc-nav__inner">
@@ -61,14 +68,34 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="cc-nav__actions">
-          <button
-            type="button"
-            className="cc-btn cc-btn--solid cc-btn--navPortal"
-            onClick={() => router.push(hasSession ? "/panel" : "/login")}
-          >
-            {hasSession ? "Ir al panel" : "Acceso al panel"}
-          </button>
+        <div className="cc-nav__actions" style={{ display: "flex", gap: "10px" }}>
+          {!hasSession ? (
+            <button
+              type="button"
+              className="cc-btn cc-btn--solid cc-btn--navPortal"
+              onClick={() => router.push("/login")}
+            >
+              Acceso al panel
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="cc-btn cc-btn--solid cc-btn--navPortal"
+                onClick={() => router.push("/panel")}
+              >
+                Ir al panel
+              </button>
+
+              <button
+                type="button"
+                className="cc-btn cc-btn--outline"
+                onClick={handleLogout}
+              >
+                Cerrar sesión
+              </button>
+            </>
+          )}
         </div>
       </div>
     </header>

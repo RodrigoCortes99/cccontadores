@@ -46,6 +46,11 @@ export default function EncargoDetallePage() {
   const [estatusEdit, setEstatusEdit] = useState<Record<number, string>>({});
   const [observacionesEdit, setObservacionesEdit] = useState<Record<number, string>>({});
 
+  const [titulo, setTitulo] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [fechaCompromiso, setFechaCompromiso] = useState("");
+  const [creando, setCreando] = useState(false);
+
   const isClientUser = userInfo?.role === "client";
 
   async function fetchMe() {
@@ -147,6 +152,71 @@ export default function EncargoDetallePage() {
     }
   }, [id, router]);
 
+  async function handleCrearSolicitud(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+    setMensaje("");
+
+    const token = localStorage.getItem("access");
+
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    if (!titulo.trim()) {
+      setError("Escribe un título para la solicitud.");
+      return;
+    }
+
+    try {
+      setCreando(true);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/encargos/${id}/pbc/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          titulo: titulo.trim(),
+          descripcion: descripcion.trim(),
+          estatus: "pendiente",
+          fecha_compromiso: fechaCompromiso || null,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.status === 401) {
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        router.push("/login");
+        return;
+      }
+
+      if (!res.ok) {
+        setError(
+          typeof data === "object"
+            ? JSON.stringify(data)
+            : "No fue posible crear la solicitud PBC."
+        );
+        return;
+      }
+
+      setMensaje("Solicitud PBC creada correctamente.");
+      setTitulo("");
+      setDescripcion("");
+      setFechaCompromiso("");
+
+      await fetchSolicitudes();
+    } catch {
+      setError("Ocurrió un error al crear la solicitud PBC.");
+    } finally {
+      setCreando(false);
+    }
+  }
+
   async function handleGuardarRevision(solicitudId: number) {
     setError("");
     setMensaje("");
@@ -223,8 +293,54 @@ export default function EncargoDetallePage() {
           <div className="container">
             <PanelBack backLabel="Volver a encargos" panelHref="/panel" />
 
-            {error && <p className="loginError">{error}</p>}
-            {mensaje && <p className="uploadSuccess">{mensaje}</p>}
+            {!isClientUser && (
+              <div className="uploadCard" style={{ marginBottom: "28px" }}>
+                <h2 className="uploadTitle">Nueva solicitud PBC</h2>
+
+                <form onSubmit={handleCrearSolicitud} className="uploadForm">
+                  <div className="loginField">
+                    <label htmlFor="titulo">Título</label>
+                    <input
+                      id="titulo"
+                      type="text"
+                      placeholder="Ej. Balanza de comprobación enero 2026"
+                      value={titulo}
+                      onChange={(e) => setTitulo(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="loginField">
+                    <label htmlFor="descripcion">Descripción</label>
+                    <textarea
+                      id="descripcion"
+                      rows={4}
+                      className="uploadTextarea"
+                      placeholder="Describe con detalle la información o evidencia que debe entregar el cliente."
+                      value={descripcion}
+                      onChange={(e) => setDescripcion(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="loginField">
+                    <label htmlFor="fechaCompromiso">Fecha compromiso</label>
+                    <input
+                      id="fechaCompromiso"
+                      type="date"
+                      value={fechaCompromiso}
+                      onChange={(e) => setFechaCompromiso(e.target.value)}
+                    />
+                  </div>
+
+                  {error && <p className="loginError">{error}</p>}
+                  {mensaje && <p className="uploadSuccess">{mensaje}</p>}
+
+                  <button type="submit" className="loginButton" disabled={creando}>
+                    {creando ? "Creando..." : "Crear solicitud PBC"}
+                  </button>
+                </form>
+              </div>
+            )}
 
             {loading && <p className="pageText">Cargando solicitudes...</p>}
 
