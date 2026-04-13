@@ -169,6 +169,11 @@ export default function EncargoDetallePage() {
       return;
     }
 
+    if (!userInfo?.organization_id) {
+      setError("No fue posible identificar la organización del usuario.");
+      return;
+    }
+
     try {
       setCreando(true);
 
@@ -179,10 +184,12 @@ export default function EncargoDetallePage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          organizacion: userInfo.organization_id,
+          encargo: Number(id),
           titulo: titulo.trim(),
-          descripcion: descripcion.trim(),
+          descripcion: descripcion.trim() || "",
           estatus: "pendiente",
-          fecha_compromiso: fechaCompromiso || null,
+          fecha_compromiso: fechaCompromiso ? fechaCompromiso : null,
         }),
       });
 
@@ -283,8 +290,8 @@ export default function EncargoDetallePage() {
             </h1>
             <p className="pageLead">
               {isClientUser
-                ? "Revisa las solicitudes de información de este encargo y consulta sus documentos."
-                : "Revisa las solicitudes, cambia el estatus y agrega observaciones para el cliente."}
+                ? "Revisa las solicitudes de información de este encargo, crea nuevas solicitudes y consulta sus documentos."
+                : "Revisa las solicitudes, crea nuevas, cambia el estatus y agrega observaciones para el cliente."}
             </p>
           </div>
         </section>
@@ -293,54 +300,52 @@ export default function EncargoDetallePage() {
           <div className="container">
             <PanelBack backLabel="Volver a encargos" panelHref="/panel" />
 
-            {!isClientUser && (
-              <div className="uploadCard" style={{ marginBottom: "28px" }}>
-                <h2 className="uploadTitle">Nueva solicitud PBC</h2>
+            <div className="uploadCard" style={{ marginBottom: "28px" }}>
+              <h2 className="uploadTitle">Nueva solicitud PBC</h2>
 
-                <form onSubmit={handleCrearSolicitud} className="uploadForm">
-                  <div className="loginField">
-                    <label htmlFor="titulo">Título</label>
-                    <input
-                      id="titulo"
-                      type="text"
-                      placeholder="Ej. Balanza de comprobación enero 2026"
-                      value={titulo}
-                      onChange={(e) => setTitulo(e.target.value)}
-                      required
-                    />
-                  </div>
+              <form onSubmit={handleCrearSolicitud} className="uploadForm">
+                <div className="loginField">
+                  <label htmlFor="titulo">Título</label>
+                  <input
+                    id="titulo"
+                    type="text"
+                    placeholder="Ej. Balanza de comprobación enero 2026"
+                    value={titulo}
+                    onChange={(e) => setTitulo(e.target.value)}
+                    required
+                  />
+                </div>
 
-                  <div className="loginField">
-                    <label htmlFor="descripcion">Descripción</label>
-                    <textarea
-                      id="descripcion"
-                      rows={4}
-                      className="uploadTextarea"
-                      placeholder="Describe con detalle la información o evidencia que debe entregar el cliente."
-                      value={descripcion}
-                      onChange={(e) => setDescripcion(e.target.value)}
-                    />
-                  </div>
+                <div className="loginField">
+                  <label htmlFor="descripcion">Descripción</label>
+                  <textarea
+                    id="descripcion"
+                    rows={4}
+                    className="uploadTextarea"
+                    placeholder="Describe con detalle la información o evidencia requerida."
+                    value={descripcion}
+                    onChange={(e) => setDescripcion(e.target.value)}
+                  />
+                </div>
 
-                  <div className="loginField">
-                    <label htmlFor="fechaCompromiso">Fecha compromiso</label>
-                    <input
-                      id="fechaCompromiso"
-                      type="date"
-                      value={fechaCompromiso}
-                      onChange={(e) => setFechaCompromiso(e.target.value)}
-                    />
-                  </div>
+                <div className="loginField">
+                  <label htmlFor="fechaCompromiso">Fecha compromiso</label>
+                  <input
+                    id="fechaCompromiso"
+                    type="date"
+                    value={fechaCompromiso}
+                    onChange={(e) => setFechaCompromiso(e.target.value)}
+                  />
+                </div>
 
-                  {error && <p className="loginError">{error}</p>}
-                  {mensaje && <p className="uploadSuccess">{mensaje}</p>}
+                {error && <p className="loginError">{error}</p>}
+                {mensaje && <p className="uploadSuccess">{mensaje}</p>}
 
-                  <button type="submit" className="loginButton" disabled={creando}>
-                    {creando ? "Creando..." : "Crear solicitud PBC"}
-                  </button>
-                </form>
-              </div>
-            )}
+                <button type="submit" className="loginButton" disabled={creando}>
+                  {creando ? "Creando..." : "Crear solicitud PBC"}
+                </button>
+              </form>
+            </div>
 
             {loading && <p className="pageText">Cargando solicitudes...</p>}
 

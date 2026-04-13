@@ -68,7 +68,7 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="cc-nav__actions" style={{ display: "flex", gap: "10px" }}>
+        <div className="cc-nav__actions">
           {!hasSession ? (
             <button
               type="button"
