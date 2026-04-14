@@ -184,7 +184,6 @@ export default function EncargoDetallePage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          organizacion: userInfo.organization_id,
           encargo: Number(id),
           titulo: titulo.trim(),
           descripcion: descripcion.trim() || "",
