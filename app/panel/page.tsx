@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/Navbar";
@@ -24,6 +24,12 @@ type Encargo = {
 type Cliente = {
   id: number;
   name: string;
+  organization: number;
+};
+
+type Organizacion = {
+  id: number;
+  name: string;
 };
 
 type CurrentUser = {
@@ -42,10 +48,12 @@ export default function PanelPage() {
   const [userInfo, setUserInfo] = useState<CurrentUser | null>(null);
   const [encargos, setEncargos] = useState<Encargo[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [organizaciones, setOrganizaciones] = useState<Organizacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [nombre, setNombre] = useState("");
+  const [organizacion, setOrganizacion] = useState("");
   const [cliente, setCliente] = useState("");
   const [tipo, setTipo] = useState("asesoria");
   const [estatus, setEstatus] = useState("planeacion");
@@ -57,12 +65,17 @@ export default function PanelPage() {
 
   const isClientUser = userInfo?.role === "client";
 
+  const clientesFiltrados = useMemo(() => {
+    if (!organizacion) return [];
+    return clientes.filter((c) => c.organization === Number(organizacion));
+  }, [clientes, organizacion]);
+
   async function fetchMe() {
     const token = localStorage.getItem("access");
 
     if (!token) {
       router.push("/login");
-      return;
+      return null;
     }
 
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me/`, {
@@ -75,7 +88,7 @@ export default function PanelPage() {
       localStorage.removeItem("access");
       localStorage.removeItem("refresh");
       router.push("/login");
-      return;
+      return null;
     }
 
     if (!res.ok) {
@@ -84,6 +97,12 @@ export default function PanelPage() {
 
     const data = await res.json();
     setUserInfo(data);
+
+    if (data.organization_id) {
+      setOrganizacion(String(data.organization_id));
+    }
+
+    return data;
   }
 
   async function fetchEncargos() {
@@ -153,6 +172,37 @@ export default function PanelPage() {
     }
   }
 
+  async function fetchOrganizaciones() {
+    try {
+      const token = localStorage.getItem("access");
+
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organizaciones/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.status === 401) {
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        router.push("/login");
+        return;
+      }
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+      setOrganizaciones(data);
+    } catch {
+      // silencio por ahora
+    }
+  }
+
   useEffect(() => {
     const token = localStorage.getItem("access");
 
@@ -166,6 +216,7 @@ export default function PanelPage() {
         await fetchMe();
         await fetchEncargos();
         await fetchClientes();
+        await fetchOrganizaciones();
       } catch {
         setError("No fue posible cargar la información del panel.");
         setLoading(false);
@@ -174,6 +225,10 @@ export default function PanelPage() {
 
     loadAll();
   }, [router]);
+
+  useEffect(() => {
+    setCliente("");
+  }, [organizacion]);
 
   async function handleCreateEncargo(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -184,6 +239,11 @@ export default function PanelPage() {
 
     if (!token) {
       router.push("/login");
+      return;
+    }
+
+    if (!organizacion) {
+      setError("Selecciona una organización.");
       return;
     }
 
@@ -202,7 +262,7 @@ export default function PanelPage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          organizacion: 1,
+          organizacion: Number(organizacion),
           cliente: Number(cliente),
           tipo,
           estatus,
@@ -286,15 +346,37 @@ export default function PanelPage() {
                   </div>
 
                   <div className="loginField">
+                    <label htmlFor="organizacion">Organización</label>
+                    <select
+                      id="organizacion"
+                      value={organizacion}
+                      onChange={(e) => setOrganizacion(e.target.value)}
+                      required
+                    >
+                      <option value="">Selecciona una organización</option>
+                      {organizaciones.map((org) => (
+                        <option key={org.id} value={org.id}>
+                          {org.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="loginField">
                     <label htmlFor="cliente">Cliente</label>
                     <select
                       id="cliente"
                       value={cliente}
                       onChange={(e) => setCliente(e.target.value)}
                       required
+                      disabled={!organizacion}
                     >
-                      <option value="">Selecciona un cliente</option>
-                      {clientes.map((c) => (
+                      <option value="">
+                        {organizacion
+                          ? "Selecciona un cliente"
+                          : "Primero selecciona una organización"}
+                      </option>
+                      {clientesFiltrados.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
                         </option>

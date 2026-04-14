@@ -169,11 +169,6 @@ export default function EncargoDetallePage() {
       return;
     }
 
-    if (!userInfo?.organization_id) {
-      setError("No fue posible identificar la organización del usuario.");
-      return;
-    }
-
     try {
       setCreando(true);
 
