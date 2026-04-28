@@ -103,18 +103,54 @@ export default function DocumentosPBCPage() {
 
       setSubiendo(true);
 
-      const formData = new FormData();
-      formData.append("archivo", archivo);
-      formData.append("nombre", nombre || archivo.name);
-      formData.append("observaciones", observaciones);
+      const resUploadUrl = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/generate-upload-url/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            filename: archivo.name,
+          }),
+        }
+      );
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/pbc/${id}/documentos/subir/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+      const uploadData = await resUploadUrl.json();
+
+      if (!resUploadUrl.ok) {
+        setError("No se pudo generar URL de subida.");
+        return;
+      }
+
+      const { upload_url, file_url } = uploadData;
+
+      const s3Res = await fetch(upload_url, {
+        method: "PUT",
+        body: archivo,
       });
+
+      if (!s3Res.ok) {
+        setError("Error al subir archivo a S3.");
+        return;
+      }
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/pbc/${id}/documentos/subir/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            archivo_url: file_url,
+            nombre: nombre || archivo.name,
+            observaciones: observaciones,
+          }),
+        }
+      );
 
       const data = await res.json();
 
@@ -126,7 +162,7 @@ export default function DocumentosPBCPage() {
       }
 
       if (!res.ok) {
-        setError(data.detail || "No fue posible subir el documento.");
+        setError(data.detail || "No fue posible guardar el documento.");
         return;
       }
 
