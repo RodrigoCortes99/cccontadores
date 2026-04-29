@@ -103,6 +103,8 @@ export default function DocumentosPBCPage() {
 
       setSubiendo(true);
 
+      const contentType = archivo.type || "application/octet-stream";
+
       const resUploadUrl = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/generate-upload-url/`,
         {
@@ -113,6 +115,7 @@ export default function DocumentosPBCPage() {
           },
           body: JSON.stringify({
             filename: archivo.name,
+            content_type: contentType,
           }),
         }
       );
@@ -120,7 +123,7 @@ export default function DocumentosPBCPage() {
       const uploadData = await resUploadUrl.json();
 
       if (!resUploadUrl.ok) {
-        setError("No se pudo generar URL de subida.");
+        setError(uploadData.detail || uploadData.error || "No se pudo generar URL de subida.");
         return;
       }
 
@@ -128,6 +131,9 @@ export default function DocumentosPBCPage() {
 
       const s3Res = await fetch(upload_url, {
         method: "PUT",
+        headers: {
+          "Content-Type": contentType,
+        },
         body: archivo,
       });
 
@@ -136,33 +142,26 @@ export default function DocumentosPBCPage() {
         return;
       }
 
+      const formData = new FormData();
+      formData.append("archivo_url", file_url);
+      formData.append("nombre", nombre || archivo.name);
+      formData.append("observaciones", observaciones);
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/pbc/${id}/documentos/subir/`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            archivo_url: file_url,
-            nombre: nombre || archivo.name,
-            observaciones: observaciones,
-          }),
+          body: formData,
         }
       );
 
       const data = await res.json();
 
-      if (res.status === 401) {
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        router.push("/login");
-        return;
-      }
-
       if (!res.ok) {
-        setError(data.detail || "No fue posible guardar el documento.");
+        setError(data.detail || data.error || "No fue posible guardar el documento.");
         return;
       }
 
@@ -179,6 +178,32 @@ export default function DocumentosPBCPage() {
       setError("Ocurrió un error al subir el archivo.");
     } finally {
       setSubiendo(false);
+    }
+  }
+
+  async function abrirDocumento(docId: number) {
+    try {
+      const token = localStorage.getItem("access");
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/documento/${docId}/url/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        alert("No se pudo abrir el archivo");
+        return;
+      }
+
+      window.open(data.url, "_blank");
+    } catch {
+      alert("Error al abrir el archivo");
     }
   }
 
@@ -219,7 +244,6 @@ export default function DocumentosPBCPage() {
                   <input
                     id="nombre"
                     type="text"
-                    placeholder="Ej. Balanza enero 2025"
                     value={nombre}
                     onChange={(e) => setNombre(e.target.value)}
                   />
@@ -229,11 +253,9 @@ export default function DocumentosPBCPage() {
                   <label htmlFor="observaciones">Observaciones</label>
                   <textarea
                     id="observaciones"
-                    placeholder="Notas o comentarios del archivo"
                     value={observaciones}
                     onChange={(e) => setObservaciones(e.target.value)}
                     rows={4}
-                    className="uploadTextarea"
                   />
                 </div>
 
@@ -248,11 +270,7 @@ export default function DocumentosPBCPage() {
 
             <div style={{ height: "28px" }} />
 
-            {loading && <p className="pageText">Cargando documentos...</p>}
-
-            {!loading && !error && documentos.length === 0 && (
-              <p className="pageText">No hay documentos cargados.</p>
-            )}
+            {loading && <p>Cargando documentos...</p>}
 
             {!loading && documentos.length > 0 && (
               <div className="cardGrid">
@@ -262,21 +280,14 @@ export default function DocumentosPBCPage() {
                     <p><strong>Versión:</strong> {doc.version}</p>
                     <p><strong>Estatus:</strong> {doc.estatus_display}</p>
                     <p><strong>Subido por:</strong> {doc.subido_por}</p>
-                    <p><strong>Fecha:</strong> {doc.subido_en}</p>
-
-                    {doc.observaciones && (
-                      <p><strong>Observaciones:</strong> {doc.observaciones}</p>
-                    )}
 
                     <div className="pageActions">
-                      <a
+                      <button
                         className="cc-btn cc-btn--solid"
-                        href={doc.archivo}
-                        target="_blank"
-                        rel="noreferrer"
+                        onClick={() => abrirDocumento(doc.id)}
                       >
                         Ver archivo
-                      </a>
+                      </button>
                     </div>
                   </article>
                 ))}
