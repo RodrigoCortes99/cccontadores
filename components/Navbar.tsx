@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useSessionState, logoutAndNotify } from "../lib/useSessionState";
 
 const navItems = [
   { label: "Inicio", href: "/" },
@@ -15,18 +17,11 @@ const navItems = [
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [hasSession, setHasSession] = useState(false);
+  const hasSession = useSessionState();
   const [logoError, setLogoError] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem("access");
-    setHasSession(!!token);
-  }, [pathname]);
-
   function handleLogout() {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    setHasSession(false);
+    logoutAndNotify();
     router.push("/login");
   }
 
@@ -35,10 +30,12 @@ export default function Navbar() {
       <div className="container cc-nav__inner">
         <Link href="/" className="cc-brand" aria-label="Ir a inicio">
           {!logoError ? (
-            <img
+            <Image
               src="/logo-cc.png"
               alt="CC Contadores Públicos"
               className="cc-brand__logo"
+              width={72}
+              height={72}
               onError={() => setLogoError(true)}
             />
           ) : (

@@ -19,9 +19,11 @@ type Cliente = {
   id: number;
   name: string;
   organization: number;
+  organization_nombre?: string;
   rfc: string;
   industry: string;
   is_active: boolean;
+  usuario_username?: string | null;
 };
 
 type Organizacion = {
@@ -29,7 +31,7 @@ type Organizacion = {
   name: string;
 };
 
-const FORM_VACIO = { name: "", rfc: "", industry: "", organization: "" };
+const FORM_VACIO = { name: "", rfc: "", industry: "", organization: "", is_active: true };
 
 export default function ClientesPage() {
   const { user } = usePanelUser();
@@ -43,11 +45,20 @@ export default function ClientesPage() {
   const [busqueda, setBusqueda] = useState("");
 
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [editando, setEditando] = useState<Cliente | null>(null);
   const [form, setForm] = useState(FORM_VACIO);
   const [guardando, setGuardando] = useState(false);
   const [errorForm, setErrorForm] = useState("");
 
   async function cargar() {
+    // Un usuario cliente no necesita el listado global de organizaciones:
+    // ni lo ve en el formulario (no puede crear/editar clientes) ni el
+    // backend le devolvería nada útil para ese propósito.
+    if (esCliente) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -73,13 +84,8 @@ export default function ClientesPage() {
 
   useEffect(() => {
     cargar();
-  }, []);
-
-  useEffect(() => {
-    if (user?.organization_id && !user.is_superuser) {
-      setForm((prev) => ({ ...prev, organization: String(user.organization_id) }));
-    }
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [esCliente]);
 
   const nombreOrganizacion = useMemo(() => {
     const mapa = new Map(organizaciones.map((o) => [o.id, o.name]));
@@ -94,7 +100,8 @@ export default function ClientesPage() {
     );
   }, [clientes, busqueda]);
 
-  function abrirModal() {
+  function abrirModalNuevo() {
+    setEditando(null);
     setErrorForm("");
     setForm({
       ...FORM_VACIO,
@@ -103,7 +110,20 @@ export default function ClientesPage() {
     setModalAbierto(true);
   }
 
-  async function handleCrearCliente(e: React.FormEvent<HTMLFormElement>) {
+  function abrirModalEditar(c: Cliente) {
+    setEditando(c);
+    setErrorForm("");
+    setForm({
+      name: c.name,
+      rfc: c.rfc || "",
+      industry: c.industry || "",
+      organization: String(c.organization),
+      is_active: c.is_active,
+    });
+    setModalAbierto(true);
+  }
+
+  async function handleGuardar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrorForm("");
 
@@ -112,7 +132,7 @@ export default function ClientesPage() {
       return;
     }
 
-    if (!form.organization) {
+    if (!editando && !form.organization) {
       setErrorForm("Selecciona una organización.");
       return;
     }
@@ -120,22 +140,29 @@ export default function ClientesPage() {
     try {
       setGuardando(true);
 
-      const res = await apiJson("/api/clientes/", "POST", {
-        name: form.name.trim(),
-        rfc: form.rfc.trim(),
-        industry: form.industry.trim(),
-        organization: Number(form.organization),
-        is_active: true,
-      });
+      const res = editando
+        ? await apiJson(`/api/clientes/${editando.id}/`, "PATCH", {
+            name: form.name.trim(),
+            rfc: form.rfc.trim(),
+            industry: form.industry.trim(),
+            is_active: form.is_active,
+          })
+        : await apiJson("/api/clientes/", "POST", {
+            name: form.name.trim(),
+            rfc: form.rfc.trim(),
+            industry: form.industry.trim(),
+            organization: Number(form.organization),
+            is_active: true,
+          });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setErrorForm(typeof data === "object" ? JSON.stringify(data) : "No fue posible crear el cliente.");
+        setErrorForm(typeof data === "object" ? JSON.stringify(data) : "No fue posible guardar el cliente.");
         return;
       }
 
-      showSuccess("Cliente creado correctamente.");
+      showSuccess(editando ? "Cliente actualizado correctamente." : "Cliente creado correctamente.");
       setModalAbierto(false);
       await cargar();
     } catch {
@@ -150,13 +177,35 @@ export default function ClientesPage() {
     { key: "name", header: "Nombre", render: (c) => c.name },
     { key: "rfc", header: "RFC", render: (c) => c.rfc || "—" },
     { key: "industry", header: "Industria", render: (c) => c.industry || "—" },
-    { key: "org", header: "Organización", render: (c) => nombreOrganizacion(c.organization) },
+    { key: "org", header: "Organización", render: (c) => c.organization_nombre || nombreOrganizacion(c.organization) },
+    { key: "usuario", header: "Usuario asociado", render: (c) => c.usuario_username || "—" },
     {
       key: "estatus",
       header: "Estatus",
       render: (c) => <StatusBadge label={c.is_active ? "Activo" : "Inactivo"} tone={c.is_active ? "green" : "gray"} />,
     },
+    {
+      key: "acciones",
+      header: "Acciones",
+      align: "right",
+      render: (c) => (
+        <div className="pageActions" style={{ justifyContent: "flex-end" }}>
+          <button type="button" className="cc-btn cc-btn--outline" onClick={() => abrirModalEditar(c)}>
+            Editar
+          </button>
+        </div>
+      ),
+    },
   ];
+
+  if (esCliente) {
+    return (
+      <>
+        <PageHeader title="Clientes" description="Esta sección no aplica para tu tipo de cuenta." />
+        <EmptyState title="No disponible" description="Los usuarios cliente no administran el directorio de clientes." />
+      </>
+    );
+  }
 
   return (
     <>
@@ -164,11 +213,9 @@ export default function ClientesPage() {
         title="Clientes"
         description="Directorio de clientes de tu organización."
         actions={
-          !esCliente && (
-            <button type="button" className="cc-btn cc-btn--solid" onClick={abrirModal}>
-              + Nuevo cliente
-            </button>
-          )
+          <button type="button" className="cc-btn cc-btn--solid" onClick={abrirModalNuevo}>
+            + Nuevo cliente
+          </button>
         }
       />
 
@@ -192,8 +239,8 @@ export default function ClientesPage() {
         <DataTable columns={columnas} rows={clientesFiltrados} getRowKey={(c) => c.id} />
       )}
 
-      <Modal open={modalAbierto} title="Nuevo cliente" onClose={() => setModalAbierto(false)}>
-        <form onSubmit={handleCrearCliente} className="uploadForm">
+      <Modal open={modalAbierto} title={editando ? `Editar: ${editando.name}` : "Nuevo cliente"} onClose={() => setModalAbierto(false)}>
+        <form onSubmit={handleGuardar} className="uploadForm">
           <FormField label="Nombre" required>
             <input
               type="text"
@@ -221,7 +268,7 @@ export default function ClientesPage() {
             </FormField>
           </FormGrid>
 
-          {(user?.is_superuser || organizaciones.length > 1) && (
+          {!editando && (user?.is_superuser || organizaciones.length > 1) && (
             <FormField label="Organización" required>
               <select
                 value={form.organization}
@@ -238,11 +285,23 @@ export default function ClientesPage() {
             </FormField>
           )}
 
+          {editando && (
+            <FormField label="Estatus">
+              <select
+                value={form.is_active ? "activo" : "inactivo"}
+                onChange={(e) => setForm((prev) => ({ ...prev, is_active: e.target.value === "activo" }))}
+              >
+                <option value="activo">Activo</option>
+                <option value="inactivo">Inactivo</option>
+              </select>
+            </FormField>
+          )}
+
           {errorForm && <p className="loginError">{errorForm}</p>}
 
           <div className="pageActions">
             <button type="submit" className="loginButton" disabled={guardando}>
-              {guardando ? "Guardando..." : "Crear cliente"}
+              {guardando ? "Guardando..." : editando ? "Guardar cambios" : "Crear cliente"}
             </button>
           </div>
         </form>

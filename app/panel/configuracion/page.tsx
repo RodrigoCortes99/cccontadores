@@ -1,15 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import PageHeader from "../../../components/panel/PageHeader";
 import { usePanelUser } from "../../../lib/PanelUserContext";
-import { roleLabel } from "../../../lib/roles";
+import { canManageUsers, isPrivileged, roleLabel } from "../../../lib/roles";
 
 export default function ConfiguracionPage() {
   const { user } = usePanelUser();
+  const puedeAdministrar = canManageUsers(user);
+  const puedeVerCatalogos = isPrivileged(user);
 
   return (
     <>
-      <PageHeader title="Configuración" description="Datos de tu cuenta y tu organización." />
+      <PageHeader title="Configuración" description="Datos de tu cuenta y administración de tu organización." />
 
       <div className="panelCard" style={{ maxWidth: 560 }}>
         <h2>Tu cuenta</h2>
@@ -28,6 +31,28 @@ export default function ConfiguracionPage() {
           </div>
         )}
       </div>
+
+      {puedeAdministrar && (
+        <div className="panelCard">
+          <h2>Administración</h2>
+          <div className="quickActionsGrid">
+            <Link href="/panel/configuracion/usuarios" className="cc-btn cc-btn--solid">
+              Usuarios
+            </Link>
+            <Link href="/panel/configuracion/organizaciones" className="cc-btn cc-btn--outline">
+              Organizaciones
+            </Link>
+            <Link href="/panel/clientes" className="cc-btn cc-btn--outline">
+              Clientes
+            </Link>
+            {puedeVerCatalogos && (
+              <Link href="/panel/time-tracking/catalogos" className="cc-btn cc-btn--outline">
+                Catálogos de control de horas
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

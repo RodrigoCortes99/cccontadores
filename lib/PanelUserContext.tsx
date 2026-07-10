@@ -37,9 +37,9 @@ export function PanelUserProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await apiFetch("/api/me/");
 
+      // apiFetch ya intentó refrescar el token y, si no pudo, ya limpió la
+      // sesión y redirigió a /login. Aquí solo falta manejar el resto de errores.
       if (res.status === 401) {
-        clearSession();
-        router.push("/login");
         return;
       }
 

@@ -9,15 +9,17 @@ type NavItem = {
   hideForClient?: boolean;
 };
 
-const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS: (NavItem & { clientLabel?: string })[] = [
   { label: "Dashboard", href: "/panel" },
   { label: "Clientes", href: "/panel/clientes", hideForClient: true },
-  { label: "Encargos", href: "/panel/encargos" },
+  { label: "Encargos", href: "/panel/encargos", clientLabel: "Mis encargos" },
   { label: "Solicitudes PBC", href: "/panel/pbc" },
   { label: "Documentos", href: "/panel/documentos" },
   { label: "Control de horas", href: "/panel/time-tracking", hideForClient: true },
   { label: "Reportes", href: "/panel/time-tracking/reportes", hideForClient: true },
-  { label: "Configuración", href: "/panel/configuracion" },
+  // Configuración incluye administración de usuarios/organizaciones/catálogos:
+  // no aplica para el rol client (sin control de costos ni administración).
+  { label: "Configuración", href: "/panel/configuracion", hideForClient: true },
 ];
 
 type SidebarProps = {
@@ -50,18 +52,21 @@ export default function Sidebar({ collapsed, mobileOpen, esCliente, onCloseMobil
         </div>
 
         <nav className="appSidebar__nav" aria-label="Navegación del panel">
-          {items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`appSidebar__link ${esActivo(item.href) ? "appSidebar__link--active" : ""}`}
-              onClick={onCloseMobile}
-              title={collapsed ? item.label : undefined}
-            >
-              <span className="appSidebar__linkDot" aria-hidden="true" />
-              {!collapsed && <span>{item.label}</span>}
-            </Link>
-          ))}
+          {items.map((item) => {
+            const etiqueta = esCliente && item.clientLabel ? item.clientLabel : item.label;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`appSidebar__link ${esActivo(item.href) ? "appSidebar__link--active" : ""}`}
+                onClick={onCloseMobile}
+                title={collapsed ? etiqueta : undefined}
+              >
+                <span className="appSidebar__linkDot" aria-hidden="true" />
+                {!collapsed && <span>{etiqueta}</span>}
+              </Link>
+            );
+          })}
         </nav>
       </aside>
 

@@ -22,6 +22,15 @@ export function isPrivileged(user: CurrentUser | null): boolean {
   return !!user && (user.is_superuser || user.role === "manager" || user.role === "partner");
 }
 
+/**
+ * Quién puede administrar usuarios, organizaciones y clientes desde el panel.
+ * Es exactamente la misma regla que `isPrivileged` (superusuario, manager o
+ * partner) — se reexpone con este nombre solo para que las pantallas de
+ * administración sean más legibles. El backend vuelve a validar esto mismo
+ * en cada endpoint; esto es solo para mostrar/ocultar la UI.
+ */
+export const canManageUsers = isPrivileged;
+
 export function roleLabel(role: string | null | undefined): string {
   switch (role) {
     case "staff":

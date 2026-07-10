@@ -1,15 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSessionState } from "../lib/useSessionState";
 
 export default function Hero() {
-  const [hasSession, setHasSession] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("access");
-    setHasSession(!!token);
-  }, []);
+  const hasSession = useSessionState();
 
   return (
     <section className="hero" id="inicio">
