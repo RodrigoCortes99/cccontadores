@@ -2,138 +2,102 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
+import PageHeader from "../../components/panel/PageHeader";
+import LoadingState from "../../components/panel/LoadingState";
+import ErrorState from "../../components/panel/ErrorState";
+import StatusBadge, { toneForEstatus } from "../../components/panel/StatusBadge";
+import { apiFetch } from "../../lib/api";
+import { usePanelUser } from "../../lib/PanelUserContext";
+import { isClientRole } from "../../lib/roles";
 
 type Encargo = {
   id: number;
   organizacion: string;
   cliente: string;
-  tipo: string;
-  tipo_display: string;
+  nombre: string;
   estatus: string;
   estatus_display: string;
-  periodo_inicio: string;
-  periodo_fin: string;
-  nombre: string;
-  notas: string;
   creado_en: string;
 };
 
-type Cliente = {
+type Solicitud = {
   id: number;
-  name: string;
-  organization: number;
+  encargo: string;
+  encargo_id: number;
+  cliente_nombre: string;
+  titulo: string;
+  estatus: string;
+  estatus_display: string;
+  estatus_calculado: string;
+  estatus_calculado_display: string;
+  fecha_compromiso: string | null;
+  fecha_recibido: string | null;
+  documentos_count: number;
+  creado_en: string;
 };
 
-type Organizacion = {
-  id: number;
-  name: string;
+type Registro = {
+  horas_calculadas: number;
 };
 
-type CurrentUser = {
-  id: number;
-  username: string;
-  role: string | null;
-  organization_id: number | null;
-  client_id: number | null;
-  client_name: string | null;
-  is_superuser: boolean;
-};
+const ESTATUS_ENCARGO_ACTIVOS = ["planeacion", "ejecucion"];
+const DIAS_PROXIMO_VENCIMIENTO = 14;
+const DIAS_ACTIVIDAD_RECIENTE = 14;
 
-export default function PanelPage() {
-  const router = useRouter();
+function hoyISO() {
+  return new Date().toISOString().slice(0, 10);
+}
 
-  const [userInfo, setUserInfo] = useState<CurrentUser | null>(null);
+function primerDiaDelMes() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
+}
+
+function diasEntre(fechaISO: string): number {
+  const hoy = new Date(hoyISO());
+  const fecha = new Date(fechaISO);
+  return Math.round((fecha.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+export default function DashboardPage() {
+  const { user } = usePanelUser();
+  const esCliente = isClientRole(user);
+
   const [encargos, setEncargos] = useState<Encargo[]>([]);
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [organizaciones, setOrganizaciones] = useState<Organizacion[]>([]);
+  const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
+  const [horasDelMes, setHorasDelMes] = useState<number | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [nombre, setNombre] = useState("");
-  const [organizacion, setOrganizacion] = useState("");
-  const [cliente, setCliente] = useState("");
-  const [tipo, setTipo] = useState("asesoria");
-  const [estatus, setEstatus] = useState("planeacion");
-  const [periodoInicio, setPeriodoInicio] = useState("");
-  const [periodoFin, setPeriodoFin] = useState("");
-  const [notas, setNotas] = useState("");
-  const [guardando, setGuardando] = useState(false);
-  const [mensaje, setMensaje] = useState("");
+  async function cargarDatos() {
+    setLoading(true);
+    setError("");
 
-  const isClientUser = userInfo?.role === "client";
-
-  const clientesFiltrados = useMemo(() => {
-    if (!organizacion) return [];
-    return clientes.filter((c) => c.organization === Number(organizacion));
-  }, [clientes, organizacion]);
-
-  async function fetchMe() {
-    const token = localStorage.getItem("access");
-
-    if (!token) {
-      router.push("/login");
-      return null;
-    }
-
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (res.status === 401) {
-      localStorage.removeItem("access");
-      localStorage.removeItem("refresh");
-      router.push("/login");
-      return null;
-    }
-
-    if (!res.ok) {
-      throw new Error("No fue posible cargar la sesión.");
-    }
-
-    const data = await res.json();
-    setUserInfo(data);
-
-    if (data.organization_id) {
-      setOrganizacion(String(data.organization_id));
-    }
-
-    return data;
-  }
-
-  async function fetchEncargos() {
     try {
-      const token = localStorage.getItem("access");
+      const [resEncargos, resSolicitudes] = await Promise.all([
+        apiFetch("/api/encargos/"),
+        apiFetch("/api/pbc/solicitudes/"),
+      ]);
 
-      if (!token) {
-        router.push("/login");
+      if (!resEncargos.ok) {
+        setError("No fue posible cargar la información del dashboard.");
+        setLoading(false);
         return;
       }
+      setEncargos(await resEncargos.json());
+      setSolicitudes(resSolicitudes.ok ? await resSolicitudes.json() : []);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/encargos/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.status === 401) {
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        router.push("/login");
-        return;
+      if (!esCliente) {
+        const resHoras = await apiFetch(
+          `/api/time-tracking/registros/?desde=${primerDiaDelMes()}&hasta=${hoyISO()}`
+        );
+        if (resHoras.ok) {
+          const dataHoras: Registro[] = await resHoras.json();
+          const total = dataHoras.reduce((acc, r) => acc + (r.horas_calculadas || 0), 0);
+          setHorasDelMes(Math.round(total * 100) / 100);
+        }
       }
-
-      if (!res.ok) {
-        setError("No fue posible cargar los encargos.");
-        return;
-      }
-
-      const data = await res.json();
-      setEncargos(data);
     } catch {
       setError("Ocurrió un error al conectar con el servidor.");
     } finally {
@@ -141,378 +105,203 @@ export default function PanelPage() {
     }
   }
 
-  async function fetchClientes() {
-    try {
-      const token = localStorage.getItem("access");
+  useEffect(() => {
+    cargarDatos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [esCliente]);
 
-      if (!token) {
-        router.push("/login");
-        return;
-      }
+  const encargosActivos = useMemo(
+    () => encargos.filter((e) => ESTATUS_ENCARGO_ACTIVOS.includes(e.estatus)),
+    [encargos]
+  );
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clientes/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  const solicitudesPendientes = useMemo(
+    () => solicitudes.filter((s) => s.estatus === "pendiente" || s.estatus === "incompleto"),
+    [solicitudes]
+  );
 
-      if (res.status === 401) {
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        router.push("/login");
-        return;
-      }
+  const solicitudesVencidas = useMemo(
+    () =>
+      solicitudes.filter(
+        (s) => s.fecha_compromiso && diasEntre(s.fecha_compromiso) < 0 && s.estatus !== "aprobado"
+      ),
+    [solicitudes]
+  );
 
-      if (!res.ok) return;
+  const documentosRecientes = useMemo(
+    () =>
+      solicitudes.filter(
+        (s) => s.fecha_recibido && diasEntre(s.fecha_recibido) >= -DIAS_ACTIVIDAD_RECIENTE
+      ),
+    [solicitudes]
+  );
 
-      const data = await res.json();
-      setClientes(data);
-    } catch {
-      // silencio por ahora
-    }
+  const proximosVencimientos = useMemo(
+    () =>
+      solicitudes
+        .filter(
+          (s) =>
+            s.fecha_compromiso &&
+            diasEntre(s.fecha_compromiso) >= 0 &&
+            diasEntre(s.fecha_compromiso) <= DIAS_PROXIMO_VENCIMIENTO &&
+            s.estatus !== "aprobado"
+        )
+        .sort((a, b) => (a.fecha_compromiso || "").localeCompare(b.fecha_compromiso || ""))
+        .slice(0, 6),
+    [solicitudes]
+  );
+
+  const requierenAtencion = useMemo(
+    () =>
+      solicitudes
+        .filter(
+          (s) =>
+            s.estatus === "incompleto" ||
+            s.estatus_calculado === "requiere_accion" ||
+            (s.fecha_compromiso && diasEntre(s.fecha_compromiso) < 0)
+        )
+        .slice(0, 6),
+    [solicitudes]
+  );
+
+  const actividadReciente = useMemo(() => {
+    const itemsEncargos = encargos
+      .filter((e) => diasEntre(e.creado_en.slice(0, 10)) >= -DIAS_ACTIVIDAD_RECIENTE)
+      .map((e) => ({
+        fecha: e.creado_en,
+        texto: `Nuevo encargo: ${e.nombre} (${e.cliente})`,
+      }));
+
+    const itemsSolicitudes = solicitudes
+      .filter((s) => diasEntre(s.creado_en.slice(0, 10)) >= -DIAS_ACTIVIDAD_RECIENTE)
+      .map((s) => ({
+        fecha: s.creado_en,
+        texto: `Nueva solicitud PBC: ${s.titulo} (${s.cliente_nombre})`,
+      }));
+
+    return [...itemsEncargos, ...itemsSolicitudes]
+      .sort((a, b) => b.fecha.localeCompare(a.fecha))
+      .slice(0, 8);
+  }, [encargos, solicitudes]);
+
+  if (loading) {
+    return (
+      <>
+        <PageHeader title="Dashboard" />
+        <LoadingState label="Cargando información..." />
+      </>
+    );
   }
 
-  async function fetchOrganizaciones() {
-    try {
-      const token = localStorage.getItem("access");
-
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organizaciones/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.status === 401) {
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        router.push("/login");
-        return;
-      }
-
-      if (!res.ok) return;
-
-      const data = await res.json();
-      setOrganizaciones(data);
-    } catch {
-      // silencio por ahora
-    }
-  }
-
-  useEffect(() => {
-    const token = localStorage.getItem("access");
-
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    async function loadAll() {
-      try {
-        await fetchMe();
-        await fetchEncargos();
-        await fetchClientes();
-        await fetchOrganizaciones();
-      } catch {
-        setError("No fue posible cargar la información del panel.");
-        setLoading(false);
-      }
-    }
-
-    loadAll();
-  }, [router]);
-
-  useEffect(() => {
-    setCliente("");
-  }, [organizacion]);
-
-  async function handleCreateEncargo(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setMensaje("");
-    setError("");
-
-    const token = localStorage.getItem("access");
-
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    if (!organizacion) {
-      setError("Selecciona una organización.");
-      return;
-    }
-
-    if (!cliente) {
-      setError("Selecciona un cliente.");
-      return;
-    }
-
-    try {
-      setGuardando(true);
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/encargos/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          organizacion: Number(organizacion),
-          cliente: Number(cliente),
-          tipo,
-          estatus,
-          periodo_inicio: periodoInicio,
-          periodo_fin: periodoFin,
-          nombre,
-          notas,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.status === 401) {
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        router.push("/login");
-        return;
-      }
-
-      if (!res.ok) {
-        setError(
-          typeof data === "object"
-            ? JSON.stringify(data)
-            : "No fue posible crear el encargo."
-        );
-        return;
-      }
-
-      setMensaje("Encargo creado correctamente.");
-      setNombre("");
-      setCliente("");
-      setTipo("asesoria");
-      setEstatus("planeacion");
-      setPeriodoInicio("");
-      setPeriodoFin("");
-      setNotas("");
-
-      await fetchEncargos();
-    } catch {
-      setError("Ocurrió un error al guardar el encargo.");
-    } finally {
-      setGuardando(false);
-    }
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Dashboard" />
+        <ErrorState message={error} onRetry={cargarDatos} />
+      </>
+    );
   }
 
   return (
     <>
-      <Navbar />
-      <main className="page">
-        <section className="pageHero">
-          <div className="container">
-            <p className="pageKicker">PANEL</p>
-            <h1 className="pageTitle">
-              {isClientUser ? "Mis requerimientos" : "Encargos de auditoría"}
-            </h1>
-            <p className="pageLead">
-              {isClientUser
-                ? "Consulta tus encargos, revisa las solicitudes PBC y carga evidencia documental."
-                : "Consulta los encargos registrados y da seguimiento a sus solicitudes PBC."}
-            </p>
+      <PageHeader
+        title={`Hola, ${user?.username || ""}`}
+        description="Esto es lo que necesita tu atención hoy."
+      />
+
+      <div className="statGrid">
+        <div className="statCard">
+          <p className="statCard__label">Encargos activos</p>
+          <p className="statCard__value">{encargosActivos.length}</p>
+          <p className="statCard__hint">{encargos.length} en total</p>
+        </div>
+
+        <div className="statCard">
+          <p className="statCard__label">Solicitudes PBC pendientes</p>
+          <p className="statCard__value">{solicitudesPendientes.length}</p>
+        </div>
+
+        <div className="statCard">
+          <p className="statCard__label">Solicitudes vencidas</p>
+          <p className="statCard__value">{solicitudesVencidas.length}</p>
+        </div>
+
+        <div className="statCard">
+          <p className="statCard__label">Documentos recibidos recientemente</p>
+          <p className="statCard__value">{documentosRecientes.length}</p>
+          <p className="statCard__hint">Últimos {DIAS_ACTIVIDAD_RECIENTE} días</p>
+        </div>
+
+        {!esCliente && (
+          <div className="statCard">
+            <p className="statCard__label">Horas registradas en el mes</p>
+            <p className="statCard__value">{horasDelMes ?? "—"}</p>
           </div>
-        </section>
+        )}
+      </div>
 
-        <section className="pageSection">
-          <div className="container">
-            {!isClientUser && (
-              <div className="uploadCard" style={{ marginBottom: "28px" }}>
-                <h2 className="uploadTitle">Nuevo encargo</h2>
-
-                <form onSubmit={handleCreateEncargo} className="uploadForm">
-                  <div className="loginField">
-                    <label htmlFor="nombre">Nombre del encargo</label>
-                    <input
-                      id="nombre"
-                      type="text"
-                      placeholder="Ej. Auditoría Gubernamental 2026"
-                      value={nombre}
-                      onChange={(e) => setNombre(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="loginField">
-                    <label htmlFor="organizacion">Organización</label>
-                    <select
-                      id="organizacion"
-                      value={organizacion}
-                      onChange={(e) => setOrganizacion(e.target.value)}
-                      required
-                    >
-                      <option value="">Selecciona una organización</option>
-                      {organizaciones.map((org) => (
-                        <option key={org.id} value={org.id}>
-                          {org.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="loginField">
-                    <label htmlFor="cliente">Cliente</label>
-                    <select
-                      id="cliente"
-                      value={cliente}
-                      onChange={(e) => setCliente(e.target.value)}
-                      required
-                      disabled={!organizacion}
-                    >
-                      <option value="">
-                        {organizacion
-                          ? "Selecciona un cliente"
-                          : "Primero selecciona una organización"}
-                      </option>
-                      {clientesFiltrados.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="loginField">
-                    <label htmlFor="tipo">Tipo</label>
-                    <select
-                      id="tipo"
-                      value={tipo}
-                      onChange={(e) => setTipo(e.target.value)}
-                    >
-                      <option value="seguro_social">
-                        Auditoría para efectos del Seguro Social
-                      </option>
-                      <option value="impuestos_estatales">
-                        Auditoría de Impuestos Estatales
-                      </option>
-                      <option value="gubernamental">
-                        Auditoría Gubernamental
-                      </option>
-                      <option value="contabilidad_financiera">
-                        Contabilidad Financiera
-                      </option>
-                      <option value="precios_transferencia">
-                        Precios de Transferencia
-                      </option>
-                      <option value="asesoria">Asesoría</option>
-                      <option value="compliance">Compliance</option>
-                    </select>
-                  </div>
-
-                  <div className="loginField">
-                    <label htmlFor="estatus">Estatus</label>
-                    <select
-                      id="estatus"
-                      value={estatus}
-                      onChange={(e) => setEstatus(e.target.value)}
-                    >
-                      <option value="planeacion">Planeación</option>
-                      <option value="ejecucion">Ejecución</option>
-                      <option value="cierre">Cierre</option>
-                      <option value="emitido">Emitido</option>
-                    </select>
-                  </div>
-
-                  <div className="loginField">
-                    <label htmlFor="periodoInicio">Periodo inicio</label>
-                    <input
-                      id="periodoInicio"
-                      type="date"
-                      value={periodoInicio}
-                      onChange={(e) => setPeriodoInicio(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="loginField">
-                    <label htmlFor="periodoFin">Periodo fin</label>
-                    <input
-                      id="periodoFin"
-                      type="date"
-                      value={periodoFin}
-                      onChange={(e) => setPeriodoFin(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="loginField">
-                    <label htmlFor="notas">Notas</label>
-                    <textarea
-                      id="notas"
-                      rows={4}
-                      className="uploadTextarea"
-                      placeholder="Observaciones del encargo"
-                      value={notas}
-                      onChange={(e) => setNotas(e.target.value)}
-                    />
-                  </div>
-
-                  {error && <p className="loginError">{error}</p>}
-                  {mensaje && <p className="uploadSuccess">{mensaje}</p>}
-
-                  <button type="submit" className="loginButton" disabled={guardando}>
-                    {guardando ? "Guardando..." : "Crear encargo"}
-                  </button>
-                </form>
+      <div className="dashboardGrid">
+        <div>
+          <div className="panelCard">
+            <h2>Solicitudes que requieren atención</h2>
+            {requierenAtencion.length === 0 && <p className="pageText">Nada pendiente por ahora.</p>}
+            {requierenAtencion.map((s) => (
+              <div key={s.id} className="panelCard__item">
+                <strong>{s.titulo}</strong> · {s.cliente_nombre}{" "}
+                <StatusBadge label={s.estatus_calculado_display} tone={toneForEstatus(s.estatus_calculado)} />
               </div>
-            )}
-
-            {loading && <p className="pageText">Cargando encargos...</p>}
-            {!loading && error && <p className="loginError">{error}</p>}
-
-            {!loading && !error && encargos.length === 0 && (
-              <p className="pageText">
-                {isClientUser
-                  ? "No tienes encargos asignados."
-                  : "No hay encargos registrados."}
-              </p>
-            )}
-
-            {!loading && encargos.length > 0 && (
-              <div className="cardGrid">
-                {encargos.map((encargo) => (
-                  <article key={encargo.id} className="contentCard">
-                    <h2>{encargo.nombre}</h2>
-                    <p><strong>Cliente:</strong> {encargo.cliente}</p>
-                    <p><strong>Organización:</strong> {encargo.organizacion}</p>
-                    <p><strong>Tipo:</strong> {encargo.tipo_display}</p>
-                    <p><strong>Estatus:</strong> {encargo.estatus_display}</p>
-                    <p>
-                      <strong>Periodo:</strong> {encargo.periodo_inicio} al {encargo.periodo_fin}
-                    </p>
-
-                    {encargo.notas && (
-                      <p><strong>Notas:</strong> {encargo.notas}</p>
-                    )}
-
-                    <div className="pageActions">
-                      <Link
-                        className="cc-btn cc-btn--solid"
-                        href={`/panel/encargos/${encargo.id}`}
-                      >
-                        {isClientUser ? "Ver requerimientos" : "Ver detalle"}
-                      </Link>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
+            ))}
           </div>
-        </section>
-      </main>
-      <Footer />
+
+          <div className="panelCard">
+            <h2>Próximos vencimientos</h2>
+            {proximosVencimientos.length === 0 && (
+              <p className="pageText">No hay compromisos en los próximos {DIAS_PROXIMO_VENCIMIENTO} días.</p>
+            )}
+            {proximosVencimientos.map((s) => (
+              <div key={s.id} className="panelCard__item">
+                <strong>{s.fecha_compromiso}</strong> — {s.titulo} · {s.cliente_nombre}
+              </div>
+            ))}
+          </div>
+
+          <div className="panelCard">
+            <h2>Actividad reciente</h2>
+            {actividadReciente.length === 0 && <p className="pageText">Sin actividad reciente.</p>}
+            {actividadReciente.map((item, idx) => (
+              <div key={idx} className="panelCard__item">
+                {item.texto}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="panelCard">
+            <h2>Accesos rápidos</h2>
+            <div className="quickActionsGrid">
+              {!esCliente && (
+                <Link href="/panel/encargos" className="cc-btn cc-btn--solid">
+                  + Nuevo encargo
+                </Link>
+              )}
+              <Link href="/panel/encargos" className="cc-btn cc-btn--outline">
+                + Nueva solicitud PBC
+              </Link>
+              {!esCliente && (
+                <Link href="/panel/time-tracking/registros?nuevo=1" className="cc-btn cc-btn--outline">
+                  + Registrar horas
+                </Link>
+              )}
+              {!esCliente && (
+                <Link href="/panel/clientes" className="cc-btn cc-btn--outline">
+                  + Nuevo cliente
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

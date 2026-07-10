@@ -1,11 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import Navbar from "../../../../components/Navbar";
-import Footer from "../../../../components/Footer";
-import PanelBack from "../../../../components/PanelBack";
+import PageHeader from "../../../../components/panel/PageHeader";
+import LoadingState from "../../../../components/panel/LoadingState";
+import ErrorState from "../../../../components/panel/ErrorState";
+import EmptyState from "../../../../components/panel/EmptyState";
+import SearchAndFilters from "../../../../components/panel/SearchAndFilters";
+import DataTable, { DataTableColumn } from "../../../../components/panel/DataTable";
+import StatusBadge, { toneForEstatus } from "../../../../components/panel/StatusBadge";
+import Modal from "../../../../components/panel/Modal";
+import FormField from "../../../../components/panel/FormField";
+import { useToast } from "../../../../components/panel/Toast";
+import { apiFetch, apiJson } from "../../../../lib/api";
+import { usePanelUser } from "../../../../lib/PanelUserContext";
+import { isClientRole } from "../../../../lib/roles";
 
 type SolicitudPBC = {
   id: number;
@@ -15,111 +25,89 @@ type SolicitudPBC = {
   descripcion: string;
   estatus: string;
   estatus_display: string;
+  estatus_calculado: string;
+  estatus_calculado_display: string;
   fecha_compromiso: string | null;
   fecha_recibido: string | null;
   observaciones_revision: string;
+  documentos_count: number;
+  documentos_aprobados_count: number;
+  documentos_con_observaciones_count: number;
+  ultima_actividad: string;
   creado_en: string;
 };
 
-type CurrentUser = {
+type Encargo = {
   id: number;
-  username: string;
-  role: string | null;
-  organization_id: number | null;
-  client_id: number | null;
-  client_name: string | null;
-  is_superuser: boolean;
+  nombre: string;
+  cliente: string;
+  organizacion: string;
+  tipo_display: string;
+  estatus_display: string;
+  periodo_inicio: string;
+  periodo_fin: string;
 };
+
+const ESTATUS_SOLICITUD = [
+  { value: "pendiente", label: "Pendiente" },
+  { value: "recibido", label: "Recibido" },
+  { value: "aprobado", label: "Aprobado" },
+  { value: "incompleto", label: "Incompleto" },
+];
 
 export default function EncargoDetallePage() {
   const params = useParams();
-  const router = useRouter();
   const id = params.id as string;
+  const { user } = usePanelUser();
+  const { showSuccess, showError } = useToast();
+  const isClientUser = isClientRole(user);
 
-  const [userInfo, setUserInfo] = useState<CurrentUser | null>(null);
+  const [encargo, setEncargo] = useState<Encargo | null>(null);
   const [solicitudes, setSolicitudes] = useState<SolicitudPBC[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [mensaje, setMensaje] = useState("");
-  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
-  const [estatusEdit, setEstatusEdit] = useState<Record<number, string>>({});
-  const [observacionesEdit, setObservacionesEdit] = useState<Record<number, string>>({});
+  const [busqueda, setBusqueda] = useState("");
+  const [filtroEstatus, setFiltroEstatus] = useState("");
 
+  const [modalAbierto, setModalAbierto] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [fechaCompromiso, setFechaCompromiso] = useState("");
   const [creando, setCreando] = useState(false);
+  const [errorForm, setErrorForm] = useState("");
 
-  const isClientUser = userInfo?.role === "client";
+  const [revisionAbierta, setRevisionAbierta] = useState<number | null>(null);
+  const [estatusEdit, setEstatusEdit] = useState<Record<number, string>>({});
+  const [observacionesEdit, setObservacionesEdit] = useState<Record<number, string>>({});
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
-  async function fetchMe() {
-    const token = localStorage.getItem("access");
-
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (res.status === 401) {
-      localStorage.removeItem("access");
-      localStorage.removeItem("refresh");
-      router.push("/login");
-      return;
-    }
-
-    if (!res.ok) {
-      throw new Error("No fue posible cargar la sesión.");
-    }
-
-    const data = await res.json();
-    setUserInfo(data);
+  async function fetchEncargo() {
+    const res = await apiFetch("/api/encargos/");
+    if (!res.ok) return;
+    const data: Encargo[] = await res.json();
+    const encontrado = data.find((e) => String(e.id) === id);
+    if (encontrado) setEncargo(encontrado);
   }
 
   async function fetchSolicitudes() {
     try {
-      const token = localStorage.getItem("access");
-
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/encargos/${id}/pbc/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.status === 401) {
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        router.push("/login");
-        return;
-      }
+      const res = await apiFetch(`/api/encargos/${id}/pbc/`);
 
       if (!res.ok) {
         setError("No fue posible cargar las solicitudes PBC.");
         return;
       }
 
-      const data = await res.json();
+      const data: SolicitudPBC[] = await res.json();
       setSolicitudes(data);
 
       const nuevosEstatus: Record<number, string> = {};
       const nuevasObservaciones: Record<number, string> = {};
-
-      data.forEach((solicitud: SolicitudPBC) => {
-        nuevosEstatus[solicitud.id] = solicitud.estatus;
-        nuevasObservaciones[solicitud.id] = solicitud.observaciones_revision || "";
+      data.forEach((s) => {
+        nuevosEstatus[s.id] = s.estatus;
+        nuevasObservaciones[s.id] = s.observaciones_revision || "";
       });
-
       setEstatusEdit(nuevosEstatus);
       setObservacionesEdit(nuevasObservaciones);
     } catch {
@@ -129,326 +117,298 @@ export default function EncargoDetallePage() {
     }
   }
 
+  async function cargarTodo() {
+    setLoading(true);
+    setError("");
+    await Promise.all([fetchEncargo(), fetchSolicitudes()]);
+  }
+
   useEffect(() => {
-    const token = localStorage.getItem("access");
-
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    async function loadAll() {
-      try {
-        await fetchMe();
-        await fetchSolicitudes();
-      } catch {
-        setError("No fue posible cargar la información del encargo.");
-        setLoading(false);
-      }
-    }
-
-    if (id) {
-      loadAll();
-    }
-  }, [id, router]);
+    if (id) cargarTodo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   async function handleCrearSolicitud(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError("");
-    setMensaje("");
-
-    const token = localStorage.getItem("access");
-
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+    setErrorForm("");
 
     if (!titulo.trim()) {
-      setError("Escribe un título para la solicitud.");
+      setErrorForm("Escribe un título para la solicitud.");
       return;
     }
 
     try {
       setCreando(true);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/encargos/${id}/pbc/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          encargo: Number(id),
-          titulo: titulo.trim(),
-          descripcion: descripcion.trim() || "",
-          estatus: "pendiente",
-          fecha_compromiso: fechaCompromiso ? fechaCompromiso : null,
-        }),
+      const res = await apiJson(`/api/encargos/${id}/pbc/`, "POST", {
+        encargo: Number(id),
+        titulo: titulo.trim(),
+        descripcion: descripcion.trim() || "",
+        estatus: "pendiente",
+        fecha_compromiso: fechaCompromiso || null,
       });
 
       const data = await res.json();
 
-      if (res.status === 401) {
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        router.push("/login");
-        return;
-      }
-
       if (!res.ok) {
-        setError(
-          typeof data === "object"
-            ? JSON.stringify(data)
-            : "No fue posible crear la solicitud PBC."
-        );
+        setErrorForm(typeof data === "object" ? JSON.stringify(data) : "No fue posible crear la solicitud PBC.");
         return;
       }
 
-      setMensaje("Solicitud PBC creada correctamente.");
+      showSuccess("Solicitud PBC creada correctamente.");
       setTitulo("");
       setDescripcion("");
       setFechaCompromiso("");
+      setModalAbierto(false);
 
       await fetchSolicitudes();
     } catch {
-      setError("Ocurrió un error al crear la solicitud PBC.");
+      setErrorForm("Ocurrió un error al crear la solicitud PBC.");
+      showError("Ocurrió un error al crear la solicitud PBC.");
     } finally {
       setCreando(false);
     }
   }
 
   async function handleGuardarRevision(solicitudId: number) {
-    setError("");
-    setMensaje("");
     setUpdatingId(solicitudId);
 
     try {
-      const token = localStorage.getItem("access");
-
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
       const nuevoEstatus = estatusEdit[solicitudId];
       const nuevaObservacion = observacionesEdit[solicitudId] || "";
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/pbc/${solicitudId}/estatus/`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            estatus: nuevoEstatus,
-            observaciones_revision: nuevaObservacion,
-          }),
-        }
-      );
+      const res = await apiJson(`/api/pbc/${solicitudId}/estatus/`, "PATCH", {
+        estatus: nuevoEstatus,
+        observaciones_revision: nuevaObservacion,
+      });
 
       const data = await res.json();
 
-      if (res.status === 401) {
-        localStorage.removeItem("access");
-        localStorage.removeItem("refresh");
-        router.push("/login");
-        return;
-      }
-
       if (!res.ok) {
-        setError(data.detail || "No fue posible actualizar la revisión.");
+        showError(data.detail || "No fue posible actualizar la revisión.");
         return;
       }
 
-      setMensaje("Revisión actualizada correctamente.");
+      showSuccess("Revisión actualizada correctamente.");
+      setRevisionAbierta(null);
       await fetchSolicitudes();
     } catch {
-      setError("Ocurrió un error al actualizar la revisión.");
+      showError("Ocurrió un error al actualizar la revisión.");
     } finally {
       setUpdatingId(null);
     }
   }
 
+  const resumenPorEstatus = useMemo(() => {
+    const conteo: Record<string, number> = {};
+    ESTATUS_SOLICITUD.forEach((s) => (conteo[s.value] = 0));
+    solicitudes.forEach((s) => {
+      conteo[s.estatus] = (conteo[s.estatus] || 0) + 1;
+    });
+    return conteo;
+  }, [solicitudes]);
+
+  const solicitudesFiltradas = useMemo(() => {
+    const q = busqueda.trim().toLowerCase();
+    return solicitudes.filter((s) => {
+      if (q && !s.titulo.toLowerCase().includes(q)) return false;
+      if (filtroEstatus && s.estatus !== filtroEstatus) return false;
+      return true;
+    });
+  }, [solicitudes, busqueda, filtroEstatus]);
+
+  const columnas: DataTableColumn<SolicitudPBC>[] = [
+    { key: "titulo", header: "Título", render: (s) => s.titulo },
+    { key: "fecha_compromiso", header: "Fecha compromiso", render: (s) => s.fecha_compromiso || "—" },
+    {
+      key: "estatus",
+      header: "Estatus",
+      render: (s) => <StatusBadge label={s.estatus_calculado_display} tone={toneForEstatus(s.estatus_calculado)} />,
+    },
+    { key: "documentos", header: "Documentos", render: (s) => s.documentos_count },
+    { key: "aprobados", header: "Aprobados", render: (s) => s.documentos_aprobados_count },
+    { key: "observaciones", header: "Con observaciones", render: (s) => s.documentos_con_observaciones_count },
+    {
+      key: "actividad",
+      header: "Última actividad",
+      render: (s) => (s.ultima_actividad ? new Date(s.ultima_actividad).toLocaleDateString() : "—"),
+    },
+    {
+      key: "acciones",
+      header: "Acciones",
+      align: "right",
+      render: (s) => (
+        <div className="pageActions" style={{ justifyContent: "flex-end" }}>
+          {!isClientUser && (
+            <button
+              type="button"
+              className="cc-btn cc-btn--outline"
+              onClick={() => setRevisionAbierta(s.id)}
+            >
+              Revisar
+            </button>
+          )}
+          <Link className="cc-btn cc-btn--solid" href={`/panel/pbc/${s.id}`}>
+            {isClientUser ? "Ver documentos" : "Documentos"}
+          </Link>
+        </div>
+      ),
+    },
+  ];
+
+  const solicitudEnRevision = solicitudes.find((s) => s.id === revisionAbierta) || null;
+
   return (
     <>
-      <Navbar />
-      <main className="page">
-        <section className="pageHero">
-          <div className="container">
-            <p className="pageKicker">ENCARGO</p>
-            <h1 className="pageTitle">
-              {isClientUser ? "Mis requerimientos" : "Solicitudes PBC"}
-            </h1>
-            <p className="pageLead">
-              {isClientUser
-                ? "Revisa las solicitudes de información de este encargo, crea nuevas solicitudes y consulta sus documentos."
-                : "Revisa las solicitudes, crea nuevas, cambia el estatus y agrega observaciones para el cliente."}
+      <PageHeader
+        title={encargo?.nombre || (isClientUser ? "Mis requerimientos" : "Solicitudes PBC")}
+        description={
+          encargo
+            ? `${encargo.cliente} · ${encargo.tipo_display} · ${encargo.periodo_inicio} — ${encargo.periodo_fin}`
+            : undefined
+        }
+        actions={
+          !isClientUser && (
+            <button type="button" className="cc-btn cc-btn--solid" onClick={() => setModalAbierto(true)}>
+              + Nueva solicitud
+            </button>
+          )
+        }
+      />
+
+      <div className="statGrid">
+        {ESTATUS_SOLICITUD.map((s) => (
+          <div key={s.value} className="statCard">
+            <p className="statCard__label">{s.label}</p>
+            <p className="statCard__value">{resumenPorEstatus[s.value] || 0}</p>
+          </div>
+        ))}
+      </div>
+
+      <SearchAndFilters
+        search={busqueda}
+        onSearchChange={setBusqueda}
+        searchPlaceholder="Buscar solicitud..."
+        filters={
+          <select value={filtroEstatus} onChange={(e) => setFiltroEstatus(e.target.value)}>
+            <option value="">Todos los estatus</option>
+            {ESTATUS_SOLICITUD.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        }
+      />
+
+      {loading && <LoadingState label="Cargando solicitudes..." />}
+      {!loading && error && <ErrorState message={error} onRetry={cargarTodo} />}
+
+      {!loading && !error && solicitudesFiltradas.length === 0 && (
+        <EmptyState title="No hay solicitudes PBC que mostrar" description={busqueda || filtroEstatus ? "Ajusta tus filtros." : "Aún no se han creado solicitudes para este encargo."} />
+      )}
+
+      {!loading && !error && solicitudesFiltradas.length > 0 && (
+        <DataTable columns={columnas} rows={solicitudesFiltradas} getRowKey={(s) => s.id} />
+      )}
+
+      <Modal open={modalAbierto} title="Nueva solicitud PBC" onClose={() => setModalAbierto(false)}>
+        <form onSubmit={handleCrearSolicitud} className="uploadForm">
+          <FormField label="Título" required>
+            <input
+              type="text"
+              placeholder="Ej. Balanza de comprobación enero 2026"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              required
+            />
+          </FormField>
+
+          <FormField label="Descripción">
+            <textarea
+              rows={4}
+              className="uploadTextarea"
+              placeholder="Describe con detalle la información o evidencia requerida."
+              value={descripcion}
+              onChange={(e) => setDescripcion(e.target.value)}
+            />
+          </FormField>
+
+          <FormField label="Fecha compromiso">
+            <input type="date" value={fechaCompromiso} onChange={(e) => setFechaCompromiso(e.target.value)} />
+          </FormField>
+
+          {errorForm && <p className="loginError">{errorForm}</p>}
+
+          <div className="pageActions">
+            <button type="submit" className="loginButton" disabled={creando}>
+              {creando ? "Creando..." : "Crear solicitud PBC"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        open={!!solicitudEnRevision}
+        title={`Revisar: ${solicitudEnRevision?.titulo || ""}`}
+        onClose={() => setRevisionAbierta(null)}
+      >
+        {solicitudEnRevision && (
+          <>
+            {solicitudEnRevision.descripcion && (
+              <p className="pageText">
+                <strong>Descripción:</strong> {solicitudEnRevision.descripcion}
+              </p>
+            )}
+
+            <p className="pageText">
+              <strong>Estatus calculado según documentos:</strong>{" "}
+              <StatusBadge
+                label={solicitudEnRevision.estatus_calculado_display}
+                tone={toneForEstatus(solicitudEnRevision.estatus_calculado)}
+              />
             </p>
-          </div>
-        </section>
 
-        <section className="pageSection">
-          <div className="container">
-            <PanelBack backLabel="Volver a encargos" panelHref="/panel" />
-
-            <div className="uploadCard" style={{ marginBottom: "28px" }}>
-              <h2 className="uploadTitle">Nueva solicitud PBC</h2>
-
-              <form onSubmit={handleCrearSolicitud} className="uploadForm">
-                <div className="loginField">
-                  <label htmlFor="titulo">Título</label>
-                  <input
-                    id="titulo"
-                    type="text"
-                    placeholder="Ej. Balanza de comprobación enero 2026"
-                    value={titulo}
-                    onChange={(e) => setTitulo(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="loginField">
-                  <label htmlFor="descripcion">Descripción</label>
-                  <textarea
-                    id="descripcion"
-                    rows={4}
-                    className="uploadTextarea"
-                    placeholder="Describe con detalle la información o evidencia requerida."
-                    value={descripcion}
-                    onChange={(e) => setDescripcion(e.target.value)}
-                  />
-                </div>
-
-                <div className="loginField">
-                  <label htmlFor="fechaCompromiso">Fecha compromiso</label>
-                  <input
-                    id="fechaCompromiso"
-                    type="date"
-                    value={fechaCompromiso}
-                    onChange={(e) => setFechaCompromiso(e.target.value)}
-                  />
-                </div>
-
-                {error && <p className="loginError">{error}</p>}
-                {mensaje && <p className="uploadSuccess">{mensaje}</p>}
-
-                <button type="submit" className="loginButton" disabled={creando}>
-                  {creando ? "Creando..." : "Crear solicitud PBC"}
-                </button>
-              </form>
-            </div>
-
-            {loading && <p className="pageText">Cargando solicitudes...</p>}
-
-            {!loading && !error && solicitudes.length === 0 && (
-              <p className="pageText">No hay solicitudes PBC registradas.</p>
-            )}
-
-            {!loading && !error && solicitudes.length > 0 && (
-              <div className="cardGrid">
-                {solicitudes.map((solicitud) => (
-                  <article key={solicitud.id} className="contentCard">
-                    <h2>{solicitud.titulo}</h2>
-
-                    <p>
-                      <strong>Estatus actual:</strong> {solicitud.estatus_display}
-                    </p>
-
-                    {solicitud.descripcion && (
-                      <p>
-                        <strong>Descripción:</strong> {solicitud.descripcion}
-                      </p>
-                    )}
-
-                    {solicitud.fecha_compromiso && (
-                      <p>
-                        <strong>Fecha compromiso:</strong> {solicitud.fecha_compromiso}
-                      </p>
-                    )}
-
-                    {solicitud.fecha_recibido && (
-                      <p>
-                        <strong>Fecha recibido:</strong> {solicitud.fecha_recibido}
-                      </p>
-                    )}
-
-                    {solicitud.observaciones_revision && (
-                      <p>
-                        <strong>Observaciones del auditor:</strong>{" "}
-                        {solicitud.observaciones_revision}
-                      </p>
-                    )}
-
-                    {!isClientUser && (
-                      <div style={{ marginTop: "14px" }}>
-                        <div className="loginField">
-                          <label htmlFor={`estatus-${solicitud.id}`}>Cambiar estatus</label>
-                          <select
-                            id={`estatus-${solicitud.id}`}
-                            value={estatusEdit[solicitud.id] || solicitud.estatus}
-                            onChange={(e) =>
-                              setEstatusEdit((prev) => ({
-                                ...prev,
-                                [solicitud.id]: e.target.value,
-                              }))
-                            }
-                          >
-                            <option value="pendiente">Pendiente</option>
-                            <option value="recibido">Recibido</option>
-                            <option value="aprobado">Aprobado</option>
-                            <option value="incompleto">Incompleto</option>
-                          </select>
-                        </div>
-
-                        <div className="loginField">
-                          <label htmlFor={`observaciones-${solicitud.id}`}>
-                            Observaciones de revisión
-                          </label>
-                          <textarea
-                            id={`observaciones-${solicitud.id}`}
-                            rows={4}
-                            className="uploadTextarea"
-                            placeholder="Ej. Falta XML, el PDF no corresponde al periodo o falta firma."
-                            value={observacionesEdit[solicitud.id] || ""}
-                            onChange={(e) =>
-                              setObservacionesEdit((prev) => ({
-                                ...prev,
-                                [solicitud.id]: e.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-
-                        <button
-                          type="button"
-                          className="loginButton"
-                          onClick={() => handleGuardarRevision(solicitud.id)}
-                          disabled={updatingId === solicitud.id}
-                        >
-                          {updatingId === solicitud.id ? "Guardando..." : "Guardar revisión"}
-                        </button>
-                      </div>
-                    )}
-
-                    <div className="pageActions" style={{ marginTop: "14px" }}>
-                      <Link
-                        className="cc-btn cc-btn--solid"
-                        href={`/panel/pbc/${solicitud.id}`}
-                      >
-                        {isClientUser ? "Ver documentos" : "Gestionar documentos"}
-                      </Link>
-                    </div>
-                  </article>
+            <FormField label="Estatus">
+              <select
+                value={estatusEdit[solicitudEnRevision.id] || solicitudEnRevision.estatus}
+                onChange={(e) =>
+                  setEstatusEdit((prev) => ({ ...prev, [solicitudEnRevision.id]: e.target.value }))
+                }
+              >
+                {ESTATUS_SOLICITUD.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
                 ))}
-              </div>
-            )}
-          </div>
-        </section>
-      </main>
-      <Footer />
+              </select>
+            </FormField>
+
+            <FormField label="Observaciones de revisión">
+              <textarea
+                rows={4}
+                className="uploadTextarea"
+                placeholder="Ej. Falta XML, el PDF no corresponde al periodo o falta firma."
+                value={observacionesEdit[solicitudEnRevision.id] || ""}
+                onChange={(e) =>
+                  setObservacionesEdit((prev) => ({ ...prev, [solicitudEnRevision.id]: e.target.value }))
+                }
+              />
+            </FormField>
+
+            <div className="pageActions">
+              <button
+                type="button"
+                className="loginButton"
+                onClick={() => handleGuardarRevision(solicitudEnRevision.id)}
+                disabled={updatingId === solicitudEnRevision.id}
+              >
+                {updatingId === solicitudEnRevision.id ? "Guardando..." : "Guardar revisión"}
+              </button>
+            </div>
+          </>
+        )}
+      </Modal>
     </>
   );
 }
