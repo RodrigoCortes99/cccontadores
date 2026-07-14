@@ -158,7 +158,11 @@ export default function DocumentosPBCPage() {
       const resUploadUrl = await apiFetch("/api/generate-upload-url/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: archivo.name, content_type: contentType }),
+        body: JSON.stringify({
+          filename: archivo.name,
+          content_type: contentType,
+          solicitud_id: id,
+        }),
       });
 
       const uploadData = await resUploadUrl.json();

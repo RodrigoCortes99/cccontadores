@@ -13,7 +13,7 @@ import FormField, { FormGrid } from "../../../components/panel/FormField";
 import { useToast } from "../../../components/panel/Toast";
 import { apiFetch, apiJson } from "../../../lib/api";
 import { usePanelUser } from "../../../lib/PanelUserContext";
-import { isClientRole } from "../../../lib/roles";
+import { isClientRole, isPrivileged } from "../../../lib/roles";
 
 type Cliente = {
   id: number;
@@ -37,6 +37,10 @@ export default function ClientesPage() {
   const { user } = usePanelUser();
   const { showSuccess, showError } = useToast();
   const esCliente = isClientRole(user);
+  // Staff y senior ven el directorio (lo necesitan para elegir cliente al
+  // crear encargos/registros), pero solo manager/partner/superusuario pueden
+  // crear o editar clientes — misma regla que usuarios y organizaciones.
+  const puedeEditarClientes = isPrivileged(user);
 
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [organizaciones, setOrganizaciones] = useState<Organizacion[]>([]);
@@ -184,18 +188,24 @@ export default function ClientesPage() {
       header: "Estatus",
       render: (c) => <StatusBadge label={c.is_active ? "Activo" : "Inactivo"} tone={c.is_active ? "green" : "gray"} />,
     },
-    {
-      key: "acciones",
-      header: "Acciones",
-      align: "right",
-      render: (c) => (
-        <div className="pageActions" style={{ justifyContent: "flex-end" }}>
-          <button type="button" className="cc-btn cc-btn--outline" onClick={() => abrirModalEditar(c)}>
-            Editar
-          </button>
-        </div>
-      ),
-    },
+    // Staff/senior solo ven el directorio: sin columna de acciones, porque
+    // no pueden editar clientes (solo manager/partner/superusuario).
+    ...(puedeEditarClientes
+      ? [
+          {
+            key: "acciones",
+            header: "Acciones",
+            align: "right" as const,
+            render: (c: Cliente) => (
+              <div className="pageActions" style={{ justifyContent: "flex-end" }}>
+                <button type="button" className="cc-btn cc-btn--outline" onClick={() => abrirModalEditar(c)}>
+                  Editar
+                </button>
+              </div>
+            ),
+          },
+        ]
+      : []),
   ];
 
   if (esCliente) {
@@ -211,11 +221,17 @@ export default function ClientesPage() {
     <>
       <PageHeader
         title="Clientes"
-        description="Directorio de clientes de tu organización."
+        description={
+          puedeEditarClientes
+            ? "Directorio de clientes de tu organización."
+            : "Directorio de clientes de tu organización (solo lectura)."
+        }
         actions={
-          <button type="button" className="cc-btn cc-btn--solid" onClick={abrirModalNuevo}>
-            + Nuevo cliente
-          </button>
+          puedeEditarClientes && (
+            <button type="button" className="cc-btn cc-btn--solid" onClick={abrirModalNuevo}>
+              + Nuevo cliente
+            </button>
+          )
         }
       />
 

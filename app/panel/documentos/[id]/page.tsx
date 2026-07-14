@@ -13,7 +13,7 @@ import FormField from "../../../../components/panel/FormField";
 import { useToast } from "../../../../components/panel/Toast";
 import { apiFetch, apiJson } from "../../../../lib/api";
 import { usePanelUser } from "../../../../lib/PanelUserContext";
-import { isClientRole, roleLabel } from "../../../../lib/roles";
+import { puedeDarAprobacionFinalPBC, puedeRevisarPBC, roleLabel } from "../../../../lib/roles";
 
 type Documento = {
   id: number;
@@ -69,7 +69,11 @@ export default function DocumentoDetallePage() {
   const id = params.id as string;
   const { user } = usePanelUser();
   const { showSuccess, showError } = useToast();
-  const puedeRevisar = !isClientRole(user);
+  const puedeRevisar = puedeRevisarPBC(user);
+  const puedeAprobarFinal = puedeDarAprobacionFinalPBC(user);
+  const opcionesEstatusRevision = puedeAprobarFinal
+    ? ESTATUS_REVISION
+    : ESTATUS_REVISION.filter((s) => s.value !== "aprobado" && s.value !== "rechazado");
 
   const [documento, setDocumento] = useState<Documento | null>(null);
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
@@ -234,7 +238,11 @@ export default function DocumentoDetallePage() {
       const resUploadUrl = await apiFetch("/api/generate-upload-url/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: archivo.name, content_type: contentType }),
+        body: JSON.stringify({
+          filename: archivo.name,
+          content_type: contentType,
+          solicitud_id: documento.solicitud,
+        }),
       });
 
       const uploadData = await resUploadUrl.json();
@@ -397,7 +405,7 @@ export default function DocumentoDetallePage() {
               <form onSubmit={handleGuardarEstatus} className="uploadForm">
                 <FormField label="Estatus">
                   <select value={nuevoEstatus} onChange={(e) => setNuevoEstatus(e.target.value)}>
-                    {ESTATUS_REVISION.map((s) => (
+                    {opcionesEstatusRevision.map((s) => (
                       <option key={s.value} value={s.value}>
                         {s.label}
                       </option>

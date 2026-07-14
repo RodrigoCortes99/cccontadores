@@ -8,7 +8,7 @@ import ErrorState from "../../components/panel/ErrorState";
 import StatusBadge, { toneForEstatus } from "../../components/panel/StatusBadge";
 import { apiFetch } from "../../lib/api";
 import { usePanelUser } from "../../lib/PanelUserContext";
-import { isClientRole } from "../../lib/roles";
+import { isClientRole, puedeCrearOperacion } from "../../lib/roles";
 
 type Encargo = {
   id: number;
@@ -62,6 +62,10 @@ function diasEntre(fechaISO: string): number {
 export default function DashboardPage() {
   const { user } = usePanelUser();
   const esCliente = isClientRole(user);
+  // Crear encargos, solicitudes PBC y clientes es exclusivo de
+  // manager/partner/superusuario (ver matriz de roles); registrar horas es
+  // de cualquier rol interno (staff/senior incluidos).
+  const puedeCrear = puedeCrearOperacion(user);
 
   const [encargos, setEncargos] = useState<Encargo[]>([]);
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
@@ -280,20 +284,22 @@ export default function DashboardPage() {
           <div className="panelCard">
             <h2>Accesos rápidos</h2>
             <div className="quickActionsGrid">
-              {!esCliente && (
+              {puedeCrear && (
                 <Link href="/panel/encargos" className="cc-btn cc-btn--solid">
                   + Nuevo encargo
                 </Link>
               )}
-              <Link href="/panel/encargos" className="cc-btn cc-btn--outline">
-                + Nueva solicitud PBC
-              </Link>
+              {puedeCrear && (
+                <Link href="/panel/encargos" className="cc-btn cc-btn--outline">
+                  + Nueva solicitud PBC
+                </Link>
+              )}
               {!esCliente && (
                 <Link href="/panel/time-tracking/registros?nuevo=1" className="cc-btn cc-btn--outline">
                   + Registrar horas
                 </Link>
               )}
-              {!esCliente && (
+              {puedeCrear && (
                 <Link href="/panel/clientes" className="cc-btn cc-btn--outline">
                   + Nuevo cliente
                 </Link>

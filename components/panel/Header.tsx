@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { apiFetch } from "../../lib/api";
+import { useState } from "react";
 import { usePanelUser } from "../../lib/PanelUserContext";
-import { roleLabel } from "../../lib/roles";
+import { puedeCambiarOrganizacionActiva, roleLabel } from "../../lib/roles";
 
 type HeaderProps = {
   onToggleSidebar: () => void;
@@ -14,29 +13,18 @@ type HeaderProps = {
 const NOMBRE_FIRMA = "CC Contadores Públicos, Auditores y Consultores S.C.";
 
 export default function Header({ onToggleSidebar, onToggleMobile, pendingCount = 0 }: HeaderProps) {
-  const { user, logout } = usePanelUser();
-  const [nombreOrganizacion, setNombreOrganizacion] = useState<string>(NOMBRE_FIRMA);
+  const { user, logout, cambiarOrganizacionActiva } = usePanelUser();
+  const [cambiando, setCambiando] = useState(false);
+  const nombreOrganizacion = user?.organization_nombre || NOMBRE_FIRMA;
+  const puedeCambiar = puedeCambiarOrganizacionActiva(user);
 
-  useEffect(() => {
-    if (!user?.organization_id) return;
-
-    let activo = true;
-
-    apiFetch("/api/organizaciones/")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((orgs: { id: number; name: string }[]) => {
-        if (!activo) return;
-        const org = orgs.find((o) => o.id === user.organization_id);
-        if (org) setNombreOrganizacion(org.name);
-      })
-      .catch(() => {
-        // si falla, se queda el nombre por default
-      });
-
-    return () => {
-      activo = false;
-    };
-  }, [user?.organization_id]);
+  async function handleCambiarOrganizacion(e: React.ChangeEvent<HTMLSelectElement>) {
+    const nuevaId = Number(e.target.value);
+    if (!nuevaId || nuevaId === user?.organization_id) return;
+    setCambiando(true);
+    await cambiarOrganizacionActiva(nuevaId);
+    setCambiando(false);
+  }
 
   return (
     <header className="appHeader">
@@ -58,7 +46,24 @@ export default function Header({ onToggleSidebar, onToggleMobile, pendingCount =
         >
           ☰
         </button>
-        <div className="appHeader__org">{nombreOrganizacion}</div>
+        {puedeCambiar ? (
+          <select
+            className="appHeader__org appHeader__orgSelect"
+            value={user?.organization_id ?? ""}
+            onChange={handleCambiarOrganizacion}
+            disabled={cambiando}
+            aria-label="Cambiar organización activa"
+            title="Cambiar organización activa"
+          >
+            {user?.organizaciones_asignadas?.map((org) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <div className="appHeader__org">{nombreOrganizacion}</div>
+        )}
       </div>
 
       <div className="appHeader__right">

@@ -14,7 +14,7 @@ import FormField, { FormGrid } from "../../../components/panel/FormField";
 import { useToast } from "../../../components/panel/Toast";
 import { apiFetch, apiJson } from "../../../lib/api";
 import { usePanelUser } from "../../../lib/PanelUserContext";
-import { isClientRole } from "../../../lib/roles";
+import { isClientRole, isPrivileged } from "../../../lib/roles";
 
 type Encargo = {
   id: number;
@@ -66,6 +66,9 @@ export default function EncargosPage() {
   const { user } = usePanelUser();
   const { showSuccess, showError } = useToast();
   const isClientUser = isClientRole(user);
+  // Crear encargos es exclusivo de manager/partner/superusuario (ver
+  // matriz de roles); staff/senior trabajan con encargos ya creados.
+  const puedeCrearEncargo = isPrivileged(user);
 
   const [encargos, setEncargos] = useState<Encargo[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -218,7 +221,7 @@ export default function EncargosPage() {
             : "Consulta los encargos registrados y da seguimiento a sus solicitudes PBC."
         }
         actions={
-          !isClientUser && (
+          puedeCrearEncargo && (
             <button type="button" className="cc-btn cc-btn--solid" onClick={abrirModal}>
               + Nuevo encargo
             </button>

@@ -14,7 +14,10 @@ import FormField, { FormGrid } from "../../../../components/panel/FormField";
 import { useToast } from "../../../../components/panel/Toast";
 import { apiFetch, apiJson } from "../../../../lib/api";
 import { usePanelUser } from "../../../../lib/PanelUserContext";
-import { canManageUsers } from "../../../../lib/roles";
+import { canManageUsers, puedeAsignarPartner } from "../../../../lib/roles";
+
+type Organizacion = { id: number; name: string };
+type Cliente = { id: number; name: string; organization: number };
 
 type Usuario = {
   id: number;
@@ -27,6 +30,9 @@ type Usuario = {
   role_display: string;
   organization: number | null;
   organization_nombre?: string;
+  // Solo viene con contenido real para staff/senior (ver
+  // UsuarioSerializer.get_organizaciones_asignadas en el backend).
+  organizaciones_asignadas?: Organizacion[];
   client_id: number | null;
   client_nombre: string | null;
   is_active: boolean;
@@ -34,8 +40,11 @@ type Usuario = {
   date_joined: string;
 };
 
-type Organizacion = { id: number; name: string };
-type Cliente = { id: number; name: string; organization: number };
+// Roles para los que tiene sentido colaborar con (o administrar) varias
+// organizaciones a la vez: staff/senior colaboran con varias firmas, y
+// manager/partner pueden ser responsables de varias organizaciones (ver
+// ROLES_MULTI_ORGANIZACION en el backend, api/views.py — misma lista).
+const ROLES_MULTI_ORGANIZACION = ["staff", "senior", "manager", "partner"];
 
 const ROLES = [
   { value: "staff", label: "Staff" },
@@ -53,6 +62,10 @@ type FormState = {
   password: string;
   role: string;
   organization: string;
+  // Solo la usa un superusuario asignando varias organizaciones a un
+  // staff/senior (ver ROLES_MULTI_ORGANIZACION). Ids como string, igual que
+  // el resto de los selects de este formulario.
+  organizaciones: string[];
   cliente: string;
   is_active: boolean;
 };
@@ -66,6 +79,7 @@ function formVacio(organizacionPredeterminada: string): FormState {
     password: "",
     role: "staff",
     organization: organizacionPredeterminada,
+    organizaciones: organizacionPredeterminada ? [organizacionPredeterminada] : [],
     cliente: "",
     is_active: true,
   };
@@ -91,6 +105,15 @@ export default function UsuariosPage() {
   const [form, setForm] = useState<FormState>(formVacio(""));
   const [guardando, setGuardando] = useState(false);
   const [errorForm, setErrorForm] = useState("");
+
+  // Un manager (no partner/superusuario) no puede volver a nadie "Socio":
+  // se le oculta esa opción al crear o editar. Si el usuario que está
+  // editando YA era socio, se conserva la opción visible (para no bloquear
+  // la edición de otros campos), pero no se ofrece para nadie más.
+  const rolesAsignables = useMemo(() => {
+    if (puedeAsignarPartner(user) || editando?.role === "partner") return ROLES;
+    return ROLES.filter((r) => r.value !== "partner");
+  }, [user, editando]);
 
   const organizacionPropia = user?.organization_id ? String(user.organization_id) : "";
 
@@ -168,11 +191,18 @@ export default function UsuariosPage() {
       password: "",
       role: u.role,
       organization: u.organization ? String(u.organization) : "",
+      organizaciones: (u.organizaciones_asignadas || []).map((org) => String(org.id)),
       cliente: u.client_id ? String(u.client_id) : "",
       is_active: u.is_active,
     });
     setModalAbierto(true);
   }
+
+  // Un superusuario puede asignar varias organizaciones, pero solo tiene
+  // sentido para staff/senior (ver _puede_asignar_varias_organizaciones en
+  // el backend, misma regla).
+  const puedeAsignarVariasOrganizaciones =
+    !!user?.is_superuser && ROLES_MULTI_ORGANIZACION.includes(form.role);
 
   async function handleGuardar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -205,6 +235,10 @@ export default function UsuariosPage() {
 
       if (user?.is_superuser && form.organization) {
         payloadBase.organization = Number(form.organization);
+      }
+
+      if (puedeAsignarVariasOrganizaciones && form.organizaciones.length > 0) {
+        payloadBase.organizaciones = form.organizaciones.map(Number);
       }
 
       if (form.password.trim()) {
@@ -259,7 +293,19 @@ export default function UsuariosPage() {
     { key: "usuario", header: "Usuario", render: (u) => u.username },
     { key: "correo", header: "Correo", render: (u) => u.email || "—" },
     { key: "rol", header: "Rol", render: (u) => u.role_display },
-    { key: "organizacion", header: "Organización", render: (u) => u.organization_nombre || "—" },
+    {
+      key: "organizacion",
+      header: "Organización",
+      render: (u) => {
+        const extra = (u.organizaciones_asignadas?.length || 0) - 1;
+        return (
+          <>
+            {u.organization_nombre || "—"}
+            {extra > 0 && <span className="pageText"> (+{extra} más)</span>}
+          </>
+        );
+      },
+    },
     { key: "cliente", header: "Cliente", render: (u) => u.client_nombre || "—" },
     {
       key: "estatus",
@@ -404,7 +450,7 @@ export default function UsuariosPage() {
           <FormGrid>
             <FormField label="Rol" required>
               <select value={form.role} onChange={(e) => setForm((prev) => ({ ...prev, role: e.target.value }))} required>
-                {ROLES.map((r) => (
+                {rolesAsignables.map((r) => (
                   <option key={r.value} value={r.value}>
                     {r.label}
                   </option>
@@ -413,7 +459,7 @@ export default function UsuariosPage() {
             </FormField>
 
             {user?.is_superuser && (
-              <FormField label="Organización" required>
+              <FormField label="Organización activa" required>
                 <select
                   value={form.organization}
                   onChange={(e) => setForm((prev) => ({ ...prev, organization: e.target.value, cliente: "" }))}
@@ -429,6 +475,31 @@ export default function UsuariosPage() {
               </FormField>
             )}
           </FormGrid>
+
+          {puedeAsignarVariasOrganizaciones && (
+            <FormField
+              label="Organizaciones asignadas"
+              hint="Ctrl/Cmd + clic para elegir varias. Este empleado podrá cambiar su organización activa entre estas."
+            >
+              <select
+                multiple
+                value={form.organizaciones}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    organizaciones: Array.from(e.target.selectedOptions, (o) => o.value),
+                  }))
+                }
+                size={Math.min(organizaciones.length, 5) || 1}
+              >
+                {organizaciones.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+          )}
 
           {form.role === "client" && (
             <FormField label="Cliente asociado" required hint="El usuario podrá ver únicamente los encargos de este cliente.">

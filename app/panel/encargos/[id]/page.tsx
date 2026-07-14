@@ -15,7 +15,7 @@ import FormField from "../../../../components/panel/FormField";
 import { useToast } from "../../../../components/panel/Toast";
 import { apiFetch, apiJson } from "../../../../lib/api";
 import { usePanelUser } from "../../../../lib/PanelUserContext";
-import { isClientRole } from "../../../../lib/roles";
+import { isClientRole, puedeCrearOperacion, puedeDarAprobacionFinalPBC, puedeRevisarPBC } from "../../../../lib/roles";
 
 type SolicitudPBC = {
   id: number;
@@ -61,6 +61,16 @@ export default function EncargoDetallePage() {
   const { user } = usePanelUser();
   const { showSuccess, showError } = useToast();
   const isClientUser = isClientRole(user);
+  // Crear solicitudes PBC es exclusivo de manager/partner/superusuario.
+  const puedeCrear = puedeCrearOperacion(user);
+  // Revisar (cambiar estatus) es de senior en adelante; staff/client no.
+  const puedeRevisar = puedeRevisarPBC(user);
+  // Solo manager/partner/superusuario pueden dejar la solicitud "Aprobado"
+  // (estado final); senior puede mover a los demás estados.
+  const puedeAprobarFinal = puedeDarAprobacionFinalPBC(user);
+  const opcionesEstatus = puedeAprobarFinal
+    ? ESTATUS_SOLICITUD
+    : ESTATUS_SOLICITUD.filter((s) => s.value !== "aprobado");
 
   const [encargo, setEncargo] = useState<Encargo | null>(null);
   const [solicitudes, setSolicitudes] = useState<SolicitudPBC[]>([]);
@@ -239,7 +249,7 @@ export default function EncargoDetallePage() {
       align: "right",
       render: (s) => (
         <div className="pageActions" style={{ justifyContent: "flex-end" }}>
-          {!isClientUser && (
+          {puedeRevisar && (
             <button
               type="button"
               className="cc-btn cc-btn--outline"
@@ -268,7 +278,7 @@ export default function EncargoDetallePage() {
             : undefined
         }
         actions={
-          !isClientUser && (
+          puedeCrear && (
             <button type="button" className="cc-btn cc-btn--solid" onClick={() => setModalAbierto(true)}>
               + Nueva solicitud
             </button>
@@ -376,7 +386,7 @@ export default function EncargoDetallePage() {
                   setEstatusEdit((prev) => ({ ...prev, [solicitudEnRevision.id]: e.target.value }))
                 }
               >
-                {ESTATUS_SOLICITUD.map((s) => (
+                {opcionesEstatus.map((s) => (
                   <option key={s.value} value={s.value}>
                     {s.label}
                   </option>

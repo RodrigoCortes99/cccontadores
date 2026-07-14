@@ -1682,6 +1682,20 @@ select {
   text-overflow: ellipsis;
 }
 
+.appHeader__orgSelect {
+  max-width: 220px;
+  border: 1px solid var(--border, #d8dde3);
+  border-radius: 6px;
+  background: transparent;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.appHeader__orgSelect:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .appHeader__right {
   display: flex;
   align-items: center;
