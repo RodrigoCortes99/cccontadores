@@ -1762,7 +1762,8 @@ select {
 
 .appMain {
   padding: 28px 32px 60px;
-  max-width: 1280px;
+  max-width: 1800px;
+  width: 100%;
 }
 
 /* ---- Page header (interno, compacto) ---- */
