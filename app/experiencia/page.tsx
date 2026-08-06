@@ -1,11 +1,19 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: "Experiencia",
+  description:
+    "Más de 20 años acompañando a empresas y profesionales en su crecimiento financiero, con más de 150 clientes atendidos en el sector público y privado.",
+  alternates: { canonical: "/experiencia" },
+};
 
 export default function ExperienciaPage() {
   return (
     <>
-      <Navbar />
+      <Navbar overlay />
       <main className="sitePage">
         <section className="heroBanner heroBanner--experience">
           <div className="heroBanner__overlay" />

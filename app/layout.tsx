@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Poppins } from "next/font/google";
+import type { Metadata } from "next";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -7,15 +8,82 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-export const metadata = {
-  title: "CC Contadores Públicos, Auditores y Consultores S.C.",
-  description: "Auditoría, consultoría y soluciones fiscales con respaldo profesional.",
+// TODO: si el dominio real de producción es distinto, ajústalo aquí — de
+// este único valor dependen las URLs canónicas y las imágenes de Open Graph.
+const SITE_URL = "https://www.cc-contadorespublicos.com";
+const SITE_NAME = "CC Contadores Públicos, Auditores y Consultores S.C.";
+const SITE_DESCRIPTION =
+  "Despacho de auditoría, consultoría y asesoría fiscal en Xalapa, Veracruz. Más de 20 años de experiencia en el sector público y privado.";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  keywords: [
+    "contadores públicos Xalapa",
+    "auditoría Veracruz",
+    "consultoría fiscal",
+    "despacho contable Xalapa",
+    "asesoría financiera",
+  ],
+  authors: [{ name: SITE_NAME }],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_MX",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [{ url: "/home-hero.jpg", width: 1200, height: 630, alt: SITE_NAME }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: ["/home-hero.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "AccountingService",
+  name: SITE_NAME,
+  description: SITE_DESCRIPTION,
+  url: SITE_URL,
+  telephone: "+52-228-840-8800",
+  email: "contacto@cc-contadorespublicos.com",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "C Jorullo 95, Aguacatal",
+    addressLocality: "Xalapa-Enríquez",
+    addressRegion: "Veracruz",
+    postalCode: "91133",
+    addressCountry: "MX",
+  },
+  areaServed: "MX",
+  sameAs: [],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body className={poppins.variable}>{children}</body>
+      <body className={poppins.variable}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

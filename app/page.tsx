@@ -1,11 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
     <>
-      <Navbar />
+      <Navbar overlay />
       <main className="sitePage">
         <section className="heroBanner heroBanner--home">
           <div className="heroBanner__overlay" />
@@ -38,7 +39,9 @@ export default function Home() {
 
             <div className="miniInfoGrid">
               <article className="miniInfoCard">
-                <div className="miniInfoIcon">✓</div>
+                <div className="miniInfoIcon">
+                  <Image src="/icon-confianza-profesional.png" alt="" width={30} height={40} />
+                </div>
                 <div>
                   <h3>Confianza profesional</h3>
                   <p>Equipo con gran experiencia técnica y creativa</p>
@@ -46,7 +49,9 @@ export default function Home() {
               </article>
 
               <article className="miniInfoCard">
-                <div className="miniInfoIcon">▣</div>
+                <div className="miniInfoIcon">
+                  <Image src="/icon-ambos-sectores.png" alt="" width={40} height={36} />
+                </div>
                 <div>
                   <h3>Ambos sectores</h3>
                   <p>Auditoría y consultoría en el sector privado y gubernamental</p>
@@ -54,7 +59,9 @@ export default function Home() {
               </article>
 
               <article className="miniInfoCard">
-                <div className="miniInfoIcon">◎</div>
+                <div className="miniInfoIcon">
+                  <Image src="/icon-etica-calidad.png" alt="" width={40} height={40} />
+                </div>
                 <div>
                   <h3>Ética y calidad</h3>
                   <p>Compromiso con principios de ética, calidad y desempeño</p>
@@ -75,19 +82,25 @@ export default function Home() {
             <div className="approachPanel">
               <div className="approachPanel__grid">
                 <article className="approachItem">
-                  <div className="approachItem__icon">☑</div>
+                  <div className="approachItem__icon">
+                    <Image src="/icon-diagnostico-preciso.png" alt="" width={48} height={42} />
+                  </div>
                   <h3>Diagnóstico preciso</h3>
                   <p>Evaluación detallada de la situación financiera y fiscal.</p>
                 </article>
 
                 <article className="approachItem approachItem--middle">
-                  <div className="approachItem__icon">✦</div>
+                  <div className="approachItem__icon">
+                    <Image src="/icon-estrategia-medida.png" alt="" width={41} height={48} />
+                  </div>
                   <h3>Estrategia a la medida</h3>
                   <p>Soluciones alineadas a los objetivos y contexto del cliente.</p>
                 </article>
 
                 <article className="approachItem">
-                  <div className="approachItem__icon">🤝</div>
+                  <div className="approachItem__icon">
+                    <Image src="/icon-acompanamiento-profesional.png" alt="" width={48} height={35} />
+                  </div>
                   <h3>Acompañamiento profesional</h3>
                   <p>Seguimiento continuo con rigor técnico y ético.</p>
                 </article>

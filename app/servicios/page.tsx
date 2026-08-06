@@ -1,10 +1,19 @@
+import type { Metadata } from "next";
+import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: "Áreas de especialización",
+  description:
+    "Contabilidad y finanzas, asesoría fiscal, auditoría y control: servicios especializados para empresas y profesionales en Xalapa, Veracruz.",
+  alternates: { canonical: "/servicios" },
+};
 
 export default function ServiciosPage() {
   return (
     <>
-      <Navbar />
+      <Navbar overlay />
       <main className="sitePage">
         <section className="heroBanner heroBanner--specialties">
           <div className="heroBanner__overlay" />
@@ -34,7 +43,9 @@ export default function ServiciosPage() {
             <div className="specialtiesCards">
               <article className="specialtyCard">
                 <div className="specialtyCard__header">
-                  <div className="specialtyCard__icon">◫</div>
+                  <div className="specialtyCard__icon">
+                    <Image src="/icon-servicio-contable.png" alt="" width={64} height={64} />
+                  </div>
                   <div>
                     <div className="specialtyCard__number">01</div>
                     <h3>Contabilidad y finanzas</h3>
@@ -49,7 +60,9 @@ export default function ServiciosPage() {
 
               <article className="specialtyCard">
                 <div className="specialtyCard__header">
-                  <div className="specialtyCard__icon">◫</div>
+                  <div className="specialtyCard__icon">
+                    <Image src="/icon-servicio-contable.png" alt="" width={64} height={64} />
+                  </div>
                   <div>
                     <div className="specialtyCard__number">02</div>
                     <h3>Asesoría Fiscal</h3>
@@ -64,7 +77,9 @@ export default function ServiciosPage() {
 
               <article className="specialtyCard">
                 <div className="specialtyCard__header">
-                  <div className="specialtyCard__icon">◫</div>
+                  <div className="specialtyCard__icon">
+                    <Image src="/icon-servicio-contable.png" alt="" width={64} height={64} />
+                  </div>
                   <div>
                     <div className="specialtyCard__number">03</div>
                     <h3>Auditoría y Control</h3>
@@ -79,10 +94,46 @@ export default function ServiciosPage() {
             </div>
 
             <div className="specialtiesBottomBar">
-              <div className="specialtiesBottomBar__item">Respuesta rápida y oportuna.</div>
-              <div className="specialtiesBottomBar__item">Confidencialidad 100% garantizada</div>
-              <div className="specialtiesBottomBar__item">Atención personalizada</div>
-              <div className="specialtiesBottomBar__item">Estamos listos para impulsar tu crecimiento.</div>
+              <div className="specialtiesBottomBar__item">
+                <Image
+                  className="specialtiesBottomBar__icon"
+                  src="/icon-respuesta-rapida.png"
+                  alt=""
+                  width={44}
+                  height={44}
+                />
+                <span>Respuesta rápida y oportuna.</span>
+              </div>
+              <div className="specialtiesBottomBar__item">
+                <Image
+                  className="specialtiesBottomBar__icon"
+                  src="/icon-confidencialidad.png"
+                  alt=""
+                  width={44}
+                  height={44}
+                />
+                <span>Confidencialidad 100% garantizada</span>
+              </div>
+              <div className="specialtiesBottomBar__item">
+                <Image
+                  className="specialtiesBottomBar__icon"
+                  src="/icon-atencion-personalizada.png"
+                  alt=""
+                  width={44}
+                  height={44}
+                />
+                <span>Atención personalizada</span>
+              </div>
+              <div className="specialtiesBottomBar__item">
+                <Image
+                  className="specialtiesBottomBar__icon"
+                  src="/icon-crecimiento.png"
+                  alt=""
+                  width={44}
+                  height={44}
+                />
+                <span>Estamos listos para impulsar tu crecimiento.</span>
+              </div>
             </div>
           </div>
         </section>

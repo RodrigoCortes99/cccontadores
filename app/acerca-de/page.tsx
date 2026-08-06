@@ -1,11 +1,19 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: "Nosotros",
+  description:
+    "Conoce a CC Contadores Públicos, Auditores y Consultores S.C.: despacho especializado en servicios contables, fiscales y financieros en Xalapa, Veracruz.",
+  alternates: { canonical: "/acerca-de" },
+};
 
 export default function AcercaDePage() {
   return (
     <>
-      <Navbar />
+      <Navbar overlay />
       <main className="sitePage">
         <section className="heroBanner heroBanner--about">
           <div className="heroBanner__overlay" />
