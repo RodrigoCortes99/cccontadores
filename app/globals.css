@@ -554,6 +554,90 @@ select {
   font-weight: 800;
 }
 
+/* ---- Reportes: detalle expandible por trabajador ---- */
+
+.reporteEmpleado {
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.reporteEmpleado:last-child {
+  border-bottom: none;
+}
+
+.reporteEmpleado__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.reporteEmpleado__toggle:hover {
+  color: var(--brand);
+}
+
+.reporteEmpleado__chevron {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.reporteEmpleado__detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 4px 16px 16px;
+  border-left: 2px solid var(--border-soft);
+  margin-left: 4px;
+}
+
+.reporteEmpleado__item {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.reporteEmpleado__itemHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand-2);
+}
+
+.reporteEmpleado__itemFecha {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.reporteEmpleado__itemHoras {
+  margin-left: auto;
+}
+
+.reporteEmpleado__itemMeta {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.reporteEmpleado__itemDesc {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
 .uploadTextarea {
   border-radius: 12px;
   border: 1px solid rgba(27, 54, 93, 0.18);
