@@ -11,6 +11,7 @@ import DataTable, { DataTableColumn } from "../../../../components/panel/DataTab
 import StatusBadge from "../../../../components/panel/StatusBadge";
 import Modal from "../../../../components/panel/Modal";
 import FormField, { FormGrid } from "../../../../components/panel/FormField";
+import MultiSelect from "../../../../components/panel/MultiSelect";
 import { useToast } from "../../../../components/panel/Toast";
 import { apiFetch, apiJson } from "../../../../lib/api";
 import { usePanelUser } from "../../../../lib/PanelUserContext";
@@ -173,6 +174,34 @@ export default function UsuariosPage() {
     return clientes.filter((c) => c.organization === orgId);
   }, [clientes, form.organization]);
 
+  // Un superusuario puede asignar varias organizaciones, pero solo tiene
+  // sentido para staff/senior/manager/partner (ver ROLES_MULTI_ORGANIZACION).
+  const puedeAsignarVariasOrganizaciones =
+    !!user?.is_superuser && ROLES_MULTI_ORGANIZACION.includes(form.role);
+
+  // La organización ACTIVA solo puede ser una de las "asignadas" cuando ese
+  // concepto aplica (rol multi-organización + ya hay al menos una asignada).
+  // En cualquier otro caso se ofrecen todas, igual que antes.
+  const organizacionActivaOpciones = useMemo(() => {
+    if (!puedeAsignarVariasOrganizaciones || form.organizaciones.length === 0) return organizaciones;
+    return organizaciones.filter((org) => form.organizaciones.includes(String(org.id)));
+  }, [organizaciones, puedeAsignarVariasOrganizaciones, form.organizaciones]);
+
+  // Igual que el backend (ver _sincronizar_organizaciones_asignadas en
+  // api/views.py): si la organización activa deja de estar entre las
+  // asignadas, se reemplaza por la primera de la nueva lista (o se limpia si
+  // la lista quedó vacía), para que nunca quede una activa "huérfana".
+  function handleOrganizacionesChange(next: string[]) {
+    setForm((prev) => {
+      const activaSigueAsignada = next.includes(prev.organization);
+      return {
+        ...prev,
+        organizaciones: next,
+        organization: activaSigueAsignada ? prev.organization : next[0] || "",
+      };
+    });
+  }
+
   function abrirModalNuevo() {
     setEditando(null);
     setErrorForm("");
@@ -197,12 +226,6 @@ export default function UsuariosPage() {
     });
     setModalAbierto(true);
   }
-
-  // Un superusuario puede asignar varias organizaciones, pero solo tiene
-  // sentido para staff/senior (ver _puede_asignar_varias_organizaciones en
-  // el backend, misma regla).
-  const puedeAsignarVariasOrganizaciones =
-    !!user?.is_superuser && ROLES_MULTI_ORGANIZACION.includes(form.role);
 
   async function handleGuardar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -459,14 +482,22 @@ export default function UsuariosPage() {
             </FormField>
 
             {user?.is_superuser && (
-              <FormField label="Organización activa" required>
+              <FormField
+                label="Organización activa"
+                required
+                hint={
+                  puedeAsignarVariasOrganizaciones && form.organizaciones.length > 0
+                    ? "Solo puede ser una de las organizaciones asignadas de abajo."
+                    : undefined
+                }
+              >
                 <select
                   value={form.organization}
                   onChange={(e) => setForm((prev) => ({ ...prev, organization: e.target.value, cliente: "" }))}
                   required
                 >
                   <option value="">Selecciona una organización</option>
-                  {organizaciones.map((org) => (
+                  {organizacionActivaOpciones.map((org) => (
                     <option key={org.id} value={org.id}>
                       {org.name}
                     </option>
@@ -479,25 +510,19 @@ export default function UsuariosPage() {
           {puedeAsignarVariasOrganizaciones && (
             <FormField
               label="Organizaciones asignadas"
-              hint="Ctrl/Cmd + clic para elegir varias. Este empleado podrá cambiar su organización activa entre estas."
+              hint="Este empleado podrá cambiar su organización activa entre las que elijas aquí."
             >
-              <select
-                multiple
+              <MultiSelect
+                options={organizaciones}
                 value={form.organizaciones}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    organizaciones: Array.from(e.target.selectedOptions, (o) => o.value),
-                  }))
-                }
-                size={Math.min(organizaciones.length, 5) || 1}
-              >
-                {organizaciones.map((org) => (
-                  <option key={org.id} value={org.id}>
-                    {org.name}
-                  </option>
-                ))}
-              </select>
+                onChange={handleOrganizacionesChange}
+                placeholder="Selecciona una o varias organizaciones"
+                searchPlaceholder="Buscar organización..."
+                emptyMessage="No hay organizaciones que coincidan."
+                ariaLabel="Organizaciones asignadas"
+                singularLabel="organización"
+                pluralLabel="organizaciones"
+              />
             </FormField>
           )}
 
