@@ -2794,8 +2794,8 @@ select {
   }
 
   .cc-nav__inner {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
     padding: 12px 0;
   }
 
@@ -2813,7 +2813,10 @@ select {
   }
 
   .cc-brand__logoWide {
-    height: 42px;
+    width: 136px;
+    height: 50px;
+    object-fit: cover;
+    object-position: center;
   }
 
   .siteFooter {
