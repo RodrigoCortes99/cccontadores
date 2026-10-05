@@ -13,6 +13,7 @@ import FormField from "../../../../components/panel/FormField";
 import { useToast } from "../../../../components/panel/Toast";
 import { apiFetch, apiJson } from "../../../../lib/api";
 import { usePanelUser } from "../../../../lib/PanelUserContext";
+import PresentationAction from '@/components/presentation/PresentationAction';
 import { puedeDarAprobacionFinalPBC, puedeRevisarPBC, roleLabel } from "../../../../lib/roles";
 
 type Documento = {
@@ -323,6 +324,7 @@ export default function DocumentoDetallePage() {
             <button type="button" className="cc-btn cc-btn--outline" onClick={abrirArchivo}>
               Ver archivo
             </button>
+            <PresentationAction source={{kind:'documentos',ref:String(documento.id)}}/>
             <button type="button" className="cc-btn cc-btn--solid" onClick={abrirModalSubir}>
               Subir nueva versión
             </button>

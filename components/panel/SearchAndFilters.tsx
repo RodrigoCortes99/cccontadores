@@ -16,13 +16,13 @@ export default function SearchAndFilters({
   return (
     <div className="filterBar">
       <div className="filterBar__row">
-        <input
+        {searchPlaceholder!==''&&<label className="uxSearchLabel">Buscar<input
           type="search"
           className="filterBar__search"
           placeholder={searchPlaceholder}
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-        />
+        /></label>}
         {actions && <div className="filterBar__actions">{actions}</div>}
       </div>
       {filters && <div className="filterBar__filters">{filters}</div>}

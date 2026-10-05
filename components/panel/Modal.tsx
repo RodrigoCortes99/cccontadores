@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 type ModalProps = {
   open: boolean;
@@ -11,28 +11,28 @@ type ModalProps = {
 };
 
 export default function Modal({ open, title, onClose, children, maxWidth = 640 }: ModalProps) {
+  const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    if (!open) return;
-
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
-
-  if (!open) return null;
+    const dialog = ref.current;
+    if (!open || !dialog) return;
+    const previous = document.activeElement as HTMLElement | null;
+    dialog.showModal();
+    return () => { dialog.close(); (previous === document.body ? document.getElementById('panel-main') : previous)?.focus(); };
+  }, [open]);
 
   return (
-    <div className="modalOverlay" onClick={onClose}>
+    <dialog ref={ref} className="uxDialog" aria-modal="true" onKeyDown={e=>{
+      if(e.key!=='Tab')return;
+      const controls=Array.from(ref.current?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href]')||[]);
+      const first=controls[0],last=controls.at(-1);
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+    }} onCancel={e=>{e.preventDefault();onClose();}} onClick={e=>{if(e.target===e.currentTarget)onClose();}} aria-label={title} style={{ maxWidth }}>
+      {open &&
       <div
         className="modalCard"
         style={{ maxWidth }}
         onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
       >
         <div className="modalCard__header">
           <h2>{title}</h2>
@@ -41,7 +41,7 @@ export default function Modal({ open, title, onClose, children, maxWidth = 640 }
           </button>
         </div>
         <div className="modalCard__body">{children}</div>
-      </div>
-    </div>
+      </div>}
+    </dialog>
   );
 }

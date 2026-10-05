@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import PageHeader from "../../../../components/panel/PageHeader";
 import LoadingState from "../../../../components/panel/LoadingState";
 import ErrorState from "../../../../components/panel/ErrorState";
@@ -88,6 +89,8 @@ function formVacio(organizacionPredeterminada: string): FormState {
 
 export default function UsuariosPage() {
   const { user } = usePanelUser();
+  const search = useSearchParams();
+  const [openedId,setOpenedId] = useState("");
   const { showSuccess, showError } = useToast();
   const puedeAdministrar = canManageUsers(user);
 
@@ -226,6 +229,13 @@ export default function UsuariosPage() {
     });
     setModalAbierto(true);
   }
+
+  useEffect(() => {
+    const id = search.get("edit");
+    if (!id || openedId === id || loading) return;
+    const target = usuarios.find(u => String(u.id) === id);
+    if (target) { abrirModalEditar(target); setOpenedId(id); }
+  }, [search, usuarios, loading, openedId]);
 
   async function handleGuardar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -381,6 +391,7 @@ export default function UsuariosPage() {
         }
       />
 
+      <p><Link href={/^\/panel\/equipo(?:\/\d+)?(?:\?|$)/.test(search.get("return")||"")?search.get("return")!:"/panel/equipo"}>← Volver a Equipo</Link> · <Link href="/panel/configuracion">Configuración</Link></p>
       <SearchAndFilters
         search={busqueda}
         onSearchChange={setBusqueda}
@@ -507,6 +518,7 @@ export default function UsuariosPage() {
             )}
           </FormGrid>
 
+          {!user?.is_superuser && <FormField label="Organización" hint="Sólo un superusuario puede cambiar la organización o sus asignaciones."><input readOnly value={editando?.organization_nombre || user?.organization_nombre || "Organización actual"}/></FormField>}
           {puedeAsignarVariasOrganizaciones && (
             <FormField
               label="Organizaciones asignadas"

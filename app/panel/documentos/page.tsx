@@ -109,7 +109,7 @@ export default function DocumentosPage() {
       align: "right",
       render: (d) => (
         <div className="pageActions" style={{ justifyContent: "flex-end" }}>
-          <Link className="cc-btn cc-btn--solid" href={`/panel/documentos/${d.id}`}>
+          <Link className="cc-btn cc-btn--outline" href={`/panel/documentos/${d.id}`}>
             Revisar
           </Link>
         </div>
@@ -124,7 +124,7 @@ export default function DocumentosPage() {
         description={
           isClientUser
             ? "Todos los documentos que has subido, en todas tus solicitudes."
-            : "Vista global de documentos y versiones de todas las solicitudes PBC."
+            : "Consulta originales, versiones y revisión de las solicitudes autorizadas."
         }
       />
 
@@ -134,7 +134,7 @@ export default function DocumentosPage() {
         searchPlaceholder="Buscar por nombre o solicitud..."
         filters={
           <>
-            <select value={filtroEstatus} onChange={(e) => setFiltroEstatus(e.target.value)}>
+            <select aria-label="Filtrar por estado" value={filtroEstatus} onChange={(e) => setFiltroEstatus(e.target.value)}>
               <option value="">Todos los estatus</option>
               {ESTATUS_REVISION.map((s) => (
                 <option key={s.value} value={s.value}>
@@ -142,7 +142,7 @@ export default function DocumentosPage() {
                 </option>
               ))}
             </select>
-            <select value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)}>
+            <select aria-label="Filtrar por cliente" value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)}>
               <option value="">Todos los clientes</option>
               {clientesDisponibles.map((c) => (
                 <option key={c} value={c}>

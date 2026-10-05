@@ -32,6 +32,15 @@ export default function ConfiguracionPage() {
         )}
       </div>
 
+      {user && user.role !== "client" && (
+        <div className="panelCard">
+          <h2>Conectividad</h2>
+          <Link href="/panel/configuracion/conectividad" className="cc-btn cc-btn--outline">
+            Métodos de entrada, salida e integración
+          </Link>
+        </div>
+      )}
+
       {puedeAdministrar && (
         <div className="panelCard">
           <h2>Administración</h2>
@@ -42,7 +51,7 @@ export default function ConfiguracionPage() {
             <Link href="/panel/configuracion/organizaciones" className="cc-btn cc-btn--outline">
               Organizaciones
             </Link>
-            <Link href="/panel/clientes" className="cc-btn cc-btn--outline">
+            <Link href="/panel/clientes/administrar" className="cc-btn cc-btn--outline">
               Clientes
             </Link>
             {puedeVerCatalogos && (

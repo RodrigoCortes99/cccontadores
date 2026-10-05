@@ -93,11 +93,11 @@ export const puedeCrearOperacion = isPrivileged;
 export function roleLabel(role: string | null | undefined): string {
   switch (role) {
     case "staff":
-      return "Staff";
+      return "Equipo";
     case "senior":
-      return "Senior";
+      return "Supervisor";
     case "manager":
-      return "Manager";
+      return "Gerente";
     case "partner":
       return "Socio";
     case "client":

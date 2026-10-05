@@ -40,7 +40,7 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError("Usuario o contraseña incorrectos.");
+        setError(res.status === 429 ? "Se alcanzó el límite de intentos. Espera un momento antes de volver a iniciar sesión." : res.status === 401 ? "Usuario o contraseña incorrectos." : "No fue posible iniciar sesión. Intenta nuevamente más tarde.");
         return;
       }
 
@@ -92,7 +92,7 @@ export default function LoginPage() {
                 />
               </div>
 
-              {error && <p className="loginError">{error}</p>}
+              {error && <p role="alert" className="loginError">{error}</p>}
 
               <button type="submit" className="loginButton" disabled={loading}>
                 {loading ? "Ingresando..." : "Entrar al sistema"}

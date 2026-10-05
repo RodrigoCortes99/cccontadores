@@ -2,7 +2,11 @@
 // No cambia contratos de API: solo centraliza fetch + manejo de token, incluido
 // el refresh automático de JWT (una sola vez, sin refreshes simultáneos).
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+// The dedicated demo origin explicitly selects its isolated local backend.
+// Other origins use the configured build-time API URL.
+const API_URL = typeof window !== "undefined" && window.location.hostname === "127.0.0.1" && window.location.port === "3011"
+  ? "http://127.0.0.1:8011"
+  : (process.env.NEXT_PUBLIC_API_URL || "");
 
 export function getAccessToken(): string | null {
   if (typeof window === "undefined") return null;

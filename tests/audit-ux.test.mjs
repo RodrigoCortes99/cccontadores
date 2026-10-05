@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {label,errorMessage,safeDownload,inbox,allowed} from '../lib/audit/model.ts';
+test('Audit: acciones vienen del servidor, FULL no concede signoff local',()=>{assert.equal(allowed({actions:{AUTHORIZE:false}},'AUTHORIZE'),false);assert.equal(allowed({actions:{}},'SUBMIT'),false);assert.equal(allowed({actions:{REVIEW:true}},'REVIEW'),true);});
+test('Audit: vigencia y estados profesionales traducidos',()=>{for(const key of ['STALE','NEEDS_REVIEW','WITHHELD','CLEAN_DEMONSTRATED','PENDING_EXTERNAL_CHECK','CANDIDATE'])assert.notEqual(label(key),key);assert.match(label('CANDIDATE'),/reconsideración/);assert.notEqual(label('CASE_REFERENCE'),label('POLICY_NUMBER'));});
+test('Audit: autorización sólo revisados actuales; supervisión conserva devoluciones',()=>{const rows=[{status:'REVIEWED',state:'STALE'},{status:'REVIEWED',state:'CURRENT'},{status:'RETURNED',state:'CURRENT'}];assert.deepEqual(inbox(rows,'authorize'),[rows[1]]);assert.ok(inbox(rows,'review').includes(rows[2]));});
+test('Audit: descarga sólo URL opaca actual emitida por API',()=>{const a={state:'CURRENT',download_url:'/api/carova/audit/artifacts/'+'a'.repeat(64)+'/file/'};assert.equal(safeDownload(a),a.download_url);for(const url of ['/api/carova/audit/artifacts/12/file/','https://evil.test/file','/api/carova/audit/artifacts/abc/file/'])assert.equal(safeDownload({...a,download_url:url}),null);assert.equal(safeDownload({...a,state:'HISTORICAL'}),null);});
+test('Audit: conflictos y permisos sin mensajes internos',()=>{for(const code of [400,403,404,409,500]){assert.ok(errorMessage(code));assert.doesNotMatch(errorMessage(code),/traceback|IntegrityError/i);}assert.match(errorMessage(409),/actualizó/);});
+import fs from 'node:fs';
+const screen=fs.readFileSync(new URL('../components/audit/PaperScreen.tsx',import.meta.url),'utf8');
+const client=fs.readFileSync(new URL('../lib/audit/client.ts',import.meta.url),'utf8');
+test('Audit: UI conserva selected/reviewed, historial separado y padre exacto',()=>{assert.match(screen,/Seleccionado no significa revisado/);assert.match(screen,/historial|Historial/);assert.match(screen,/Revisión exacta/);assert.match(client,/revision_ref:p.revision_ref/);assert.doesNotMatch(client,/localStorage|console\./);});

@@ -287,9 +287,9 @@ function MisRegistrosContent() {
         searchPlaceholder=""
         filters={
           <>
-            <input type="date" value={filtroDesde} onChange={(e) => setFiltroDesde(e.target.value)} />
-            <input type="date" value={filtroHasta} onChange={(e) => setFiltroHasta(e.target.value)} />
-            <select value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)}>
+            <label>Desde<input type="date" value={filtroDesde} onChange={(e) => setFiltroDesde(e.target.value)} /></label>
+            <label>Hasta<input type="date" value={filtroHasta} onChange={(e) => setFiltroHasta(e.target.value)} /></label>
+            <select aria-label="Cliente" value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)}>
               <option value="">Todos los clientes</option>
               {clientesOrdenados.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -313,14 +313,13 @@ function MisRegistrosContent() {
       )}
 
       {!loading && registros.length > 0 && (
-        <div className="cardGrid">
+        <div className="dataTableWrap"><table className="dataTable"><thead><tr><th>Fecha</th><th>Cliente / persona</th><th>Actividad</th><th style={{textAlign:"right"}}>Horas</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
           {registros.map((registro) => {
             const esDueno = registro.employee === user?.id;
             const enEdicion = editandoId === registro.id;
 
             return (
-              <article key={registro.id} className="contentCard">
-                <h2>{registro.cliente_nombre}</h2>
+              <tr key={registro.id}><td>{registro.date}</td><td><strong>{registro.cliente_nombre}</strong><small>{registro.employee_nombre}</small></td><td>{registro.activity_type_nombre || "Sin actividad declarada"}</td><td data-align="right" style={{textAlign:"right",fontVariantNumeric:"tabular-nums"}}>{registro.horas_calculadas}</td><td><span className="badge">{registro.status_display}</span><small>{registro.facturacion_display}</small></td><td><details open={enEdicion || undefined}><summary>Consultar / revisar</summary>
                 <p>
                   <strong>Contador:</strong> {registro.employee_nombre}
                 </p>
@@ -399,8 +398,8 @@ function MisRegistrosContent() {
                 {esPrivilegiado && !esDueno && (
                   <div style={{ marginTop: 14 }}>
                     <div className="loginField">
-                      <label>Estatus</label>
-                      <select
+                      <label htmlFor={`review-status-${registro.id}`}>Estatus</label>
+                      <select id={`review-status-${registro.id}`}
                         value={revisionEdits[registro.id]?.status || registro.status}
                         onChange={(e) =>
                           setRevisionEdits((prev) => ({
@@ -417,8 +416,8 @@ function MisRegistrosContent() {
                     </div>
 
                     <div className="loginField">
-                      <label>Facturación</label>
-                      <select
+                      <label htmlFor={`review-billing-${registro.id}`}>Facturación</label>
+                      <select id={`review-billing-${registro.id}`}
                         value={revisionEdits[registro.id]?.facturacion || registro.facturacion}
                         onChange={(e) =>
                           setRevisionEdits((prev) => ({
@@ -434,8 +433,8 @@ function MisRegistrosContent() {
                     </div>
 
                     <div className="loginField">
-                      <label>Observaciones</label>
-                      <textarea
+                      <label htmlFor={`review-notes-${registro.id}`}>Observaciones</label>
+                      <textarea id={`review-notes-${registro.id}`}
                         rows={2}
                         value={revisionEdits[registro.id]?.observaciones ?? registro.observaciones}
                         onChange={(e) =>
@@ -457,10 +456,10 @@ function MisRegistrosContent() {
                     </button>
                   </div>
                 )}
-              </article>
+              </details></td></tr>
             );
           })}
-        </div>
+        </tbody></table></div>
       )}
 
       <Modal open={modalAbierto} title="Nuevo registro" onClose={() => setModalAbierto(false)} maxWidth={720}>
@@ -474,7 +473,7 @@ function MisRegistrosContent() {
             servicios={servicios}
           />
 
-          {errorForm && <p className="loginError">{errorForm}</p>}
+          {errorForm && <p role="alert" className="loginError">{errorForm}</p>}
 
           <div className="pageActions">
             <button type="submit" className="loginButton" disabled={guardando}>

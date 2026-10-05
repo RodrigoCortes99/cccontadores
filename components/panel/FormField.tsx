@@ -1,3 +1,4 @@
+import {useId,isValidElement,cloneElement,type ReactElement} from 'react';
 type FormFieldProps = {
   label: string;
   htmlFor?: string;
@@ -8,15 +9,18 @@ type FormFieldProps = {
 };
 
 export default function FormField({ label, htmlFor, hint, error, required, children }: FormFieldProps) {
+  const generated=useId();
+  const control=isValidElement(children)?children as ReactElement<{id?:string;'aria-describedby'?:string;'aria-invalid'?:boolean}>:null;
+  const id=htmlFor||control?.props.id||generated;
   return (
     <div className="loginField">
-      <label htmlFor={htmlFor}>
+      <label htmlFor={id}>
         {label}
         {required && <span className="formField__required"> *</span>}
       </label>
-      {children}
-      {hint && !error && <span className="formField__hint">{hint}</span>}
-      {error && <span className="loginError">{error}</span>}
+      {control?cloneElement(control,{id,'aria-describedby':hint||error?id+'-help':control.props['aria-describedby'],'aria-invalid':!!error}):children}
+      {hint && !error && <span id={id+'-help'} className="formField__hint">{hint}</span>}
+      {error && <span id={id+'-help'} role="alert" className="loginError">{error}</span>}
     </div>
   );
 }

@@ -214,7 +214,7 @@ export default function EncargosPage() {
   return (
     <>
       <PageHeader
-        title={isClientUser ? "Mis encargos" : "Encargos de auditoría"}
+        title={isClientUser ? "Mis encargos" : "Auditoría"}
         description={
           isClientUser
             ? "Consulta tus encargos y da seguimiento a sus solicitudes PBC."
@@ -235,7 +235,7 @@ export default function EncargosPage() {
         searchPlaceholder="Buscar por nombre o cliente..."
         filters={
           <>
-            <select value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)}>
+            <select aria-label="Filtrar por cliente" value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)}>
               <option value="">Todos los clientes</option>
               {nombresClientes.map((c) => (
                 <option key={c} value={c}>
@@ -243,7 +243,7 @@ export default function EncargosPage() {
                 </option>
               ))}
             </select>
-            <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
+            <select aria-label="Filtrar por tipo de encargo" value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
               <option value="">Todos los tipos</option>
               {TIPOS.map((t) => (
                 <option key={t.value} value={t.value}>
@@ -251,7 +251,7 @@ export default function EncargosPage() {
                 </option>
               ))}
             </select>
-            <select value={filtroEstatus} onChange={(e) => setFiltroEstatus(e.target.value)}>
+            <select aria-label="Filtrar por estado" value={filtroEstatus} onChange={(e) => setFiltroEstatus(e.target.value)}>
               <option value="">Todos los estatus</option>
               {ESTATUS.map((s) => (
                 <option key={s.value} value={s.value}>

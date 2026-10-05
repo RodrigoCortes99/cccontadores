@@ -1,0 +1,3 @@
+export function internalPath(value?:string):boolean{return typeof value==='string'&&value.startsWith('/')&&!value.startsWith('//')&&!/[\\\u0000-\u001f]/.test(value)&&!/%2f|%5c/i.test(value);}
+export function readable(value:unknown):string{return value===null||value===undefined?'Sin dato':typeof value==='boolean'?(value?'Sí':'No'):Array.isArray(value)&&value.every(v=>typeof v!=='object')?value.join(', '):typeof value==='object'?JSON.stringify(value):String(value);}
+export const quickActions=['¿Qué falta este mes?','Resumir periodo','Revisar documentos','Conciliar banco','Ver diferencias IVA','Resumir actividad del equipo'];

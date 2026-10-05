@@ -1,3 +1,5 @@
+import "./platform.css";
+import "./operational.css";
 import type { Metadata } from "next";
 import { PanelUserProvider } from "../../lib/PanelUserContext";
 import { ToastProvider } from "../../components/panel/Toast";

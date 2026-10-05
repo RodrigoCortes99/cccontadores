@@ -3,16 +3,19 @@
 import { useState } from "react";
 import { usePanelUser } from "../../lib/PanelUserContext";
 import { puedeCambiarOrganizacionActiva, roleLabel } from "../../lib/roles";
+import { publicEnvironmentLabel } from "../../lib/branding";
 
 type HeaderProps = {
   onToggleSidebar: () => void;
   onToggleMobile: () => void;
   pendingCount?: number;
+  mobileOpen?: boolean;
+  collapsed?: boolean;
 };
 
 const NOMBRE_FIRMA = "CC Contadores Públicos, Auditores y Consultores S.C.";
 
-export default function Header({ onToggleSidebar, onToggleMobile, pendingCount = 0 }: HeaderProps) {
+export default function Header({ onToggleSidebar, onToggleMobile, mobileOpen, collapsed }: HeaderProps) {
   const { user, logout, cambiarOrganizacionActiva } = usePanelUser();
   const [cambiando, setCambiando] = useState(false);
   const nombreOrganizacion = user?.organization_nombre || NOMBRE_FIRMA;
@@ -33,8 +36,10 @@ export default function Header({ onToggleSidebar, onToggleMobile, pendingCount =
           type="button"
           className="appHeader__iconBtn appHeader__iconBtn--desktop"
           onClick={onToggleSidebar}
-          aria-label="Colapsar menú"
-          title="Colapsar menú"
+          aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+          title={collapsed ? "Expandir menú" : "Colapsar menú"}
+          aria-controls="panel-navigation"
+          aria-expanded={!collapsed}
         >
           ☰
         </button>
@@ -43,10 +48,16 @@ export default function Header({ onToggleSidebar, onToggleMobile, pendingCount =
           className="appHeader__iconBtn appHeader__iconBtn--mobile"
           onClick={onToggleMobile}
           aria-label="Abrir menú"
+          aria-controls="panel-navigation"
+          aria-expanded={mobileOpen}
         >
           ☰
         </button>
-        {puedeCambiar ? (
+        <div className="appHeader__identity" title={`Organización activa: ${nombreOrganizacion}`}>
+          CC Contadores
+          {publicEnvironmentLabel && <span className="appHeader__environment">{publicEnvironmentLabel}</span>}
+        </div>
+        {puedeCambiar && (
           <select
             className="appHeader__org appHeader__orgSelect"
             value={user?.organization_id ?? ""}
@@ -61,17 +72,10 @@ export default function Header({ onToggleSidebar, onToggleMobile, pendingCount =
               </option>
             ))}
           </select>
-        ) : (
-          <div className="appHeader__org">{nombreOrganizacion}</div>
         )}
       </div>
 
       <div className="appHeader__right">
-        <button type="button" className="appHeader__iconBtn" aria-label="Notificaciones" title="Notificaciones">
-          🔔
-          {pendingCount > 0 && <span className="appHeader__badge">{pendingCount}</span>}
-        </button>
-
         <div className="appHeader__user">
           <span className="appHeader__userName">{user?.username || "..."}</span>
           <span className="appHeader__userRole">{roleLabel(user?.role)}</span>

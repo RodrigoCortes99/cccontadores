@@ -56,3 +56,22 @@ export function WhatsAppIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+// The same stroke-based local icon family, extended for the authenticated menu.
+export function NavigationIcon({name}:{name:string}) {
+ const paths:Record<string,string>={
+ Inicio:'M3 11 12 3l9 8M5 10v11h5v-7h4v7h5V10',
+ Clientes:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M18 8a4 4 0 0 1 0 8M20 21v-2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
+ Bancos:'m3 8 9-5 9 5H3M5 8v10m5-10v10m4-10v10m5-10v10M3 21h18M3 18h18',
+ IVA:'M5 3h14v18H5zM8 8h8M8 12h8M8 16h5',
+ Contabilidad:'M3 4h18v16H3zM7 8v8m5-8v8m5-8v8',
+ Pendientes:'M9 11l2 2 4-4M4 4h16v16H4z',
+ Horas:'M12 8v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
+ Configuración:'M9 3h6l1 4 4 1v8l-4 1-1 4H9l-1-4-4-1V8l4-1 1-4M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0',
+ Conectividad:'M8 12h8M9 7H7a5 5 0 0 0 0 10h2m6-10h2a5 5 0 0 1 0 10h-2',
+ Facturación:'M3 5h18v14H3zM3 9h18M7 14h3',
+ Nómina:'M3 6h18v14H3zM8 3v6m8-6v6M7 13h10M7 16h6',
+ Egresos:'M3 5h18v14H3zM9 12h6m-3-3 3 3-3 3',
+ };
+ return <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[name]||'M6 3h8l4 4v14H6zM14 3v5h4M9 12h6M9 16h6'}/></svg>;
+}

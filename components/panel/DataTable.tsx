@@ -27,7 +27,7 @@ export default function DataTable<T>({ columns, rows, getRowKey, emptyMessage }:
         <thead>
           <tr>
             {columns.map((col) => (
-              <th key={col.key} style={{ textAlign: col.align || "left" }}>
+              <th scope="col" key={col.key} style={{ textAlign: col.align || "left" }}>
                 {col.header}
               </th>
             ))}
@@ -37,7 +37,7 @@ export default function DataTable<T>({ columns, rows, getRowKey, emptyMessage }:
           {rows.map((row) => (
             <tr key={getRowKey(row)}>
               {columns.map((col) => (
-                <td key={col.key} data-label={col.header} style={{ textAlign: col.align || "left" }}>
+                <td key={col.key} data-label={col.header} data-align={col.align || "left"} style={{ textAlign: col.align || "left" }}>
                   {col.render(row)}
                 </td>
               ))}

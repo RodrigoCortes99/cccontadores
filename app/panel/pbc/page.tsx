@@ -155,7 +155,7 @@ export default function SolicitudesPBCPage() {
         searchPlaceholder="Buscar por título o cliente..."
         filters={
           <>
-            <select value={filtroEstatus} onChange={(e) => setFiltroEstatus(e.target.value)}>
+            <select aria-label="Filtrar por estado" value={filtroEstatus} onChange={(e) => setFiltroEstatus(e.target.value)}>
               <option value="">Todos los estatus</option>
               {ESTATUS_SOLICITUD.map((s) => (
                 <option key={s.value} value={s.value}>
@@ -163,7 +163,7 @@ export default function SolicitudesPBCPage() {
                 </option>
               ))}
             </select>
-            <select value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)}>
+            <select aria-label="Filtrar por cliente" value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)}>
               <option value="">Todos los clientes</option>
               {clientesDisponibles.map((c) => (
                 <option key={c} value={c}>

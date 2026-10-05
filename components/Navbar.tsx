@@ -82,20 +82,20 @@ export default function Navbar({ overlay = false }: NavbarProps) {
         <Link href="/" className="cc-brand" aria-label="Ir a inicio">
           {showWhiteLogo ? (
             <Image
-              src="/logo-cc-blanco.png"
+              src="/logo-cc-transparente.png"
               alt="CC Contadores Públicos, Auditores y Consultores S.C."
               className="cc-brand__logoWide"
-              width={218}
-              height={82}
+              width={827}
+              height={260}
               priority
             />
           ) : !logoError ? (
             <Image
-              src="/logo-cc.png"
+              src="/logo-cc-transparente.png"
               alt="CC Contadores Públicos, Auditores y Consultores S.C."
               className="cc-brand__logoWide"
-              width={187}
-              height={77}
+              width={827}
+              height={260}
               onError={() => setLogoError(true)}
               priority
             />

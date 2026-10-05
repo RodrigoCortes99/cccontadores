@@ -25,7 +25,7 @@ export function registroFormVacio(): RegistroFormState {
     activity_type: "",
     area: "",
     servicio: "",
-    date: new Date().toISOString().slice(0, 10),
+    date: new Intl.DateTimeFormat('en-CA',{timeZone:'America/Mexico_City',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()),
     start_time: "",
     end_time: "",
     manual_hours: "",

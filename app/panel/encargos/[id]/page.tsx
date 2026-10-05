@@ -38,6 +38,7 @@ type SolicitudPBC = {
 };
 
 type Encargo = {
+  audit_url?: string | null;
   id: number;
   nombre: string;
   cliente: string;
@@ -270,6 +271,8 @@ export default function EncargoDetallePage() {
 
   return (
     <>
+      {process.env.NEXT_PUBLIC_CAROVA_AI_ENABLED === "true" && <Link href={`/panel/carova?encargo=${id}`} className="btn btn-secondary">Preguntar a Carova sobre este encargo</Link>}
+      {encargo?.audit_url && <Link className="cc-btn cc-btn--solid" href={encargo.audit_url}>Auditoría / Papeles de trabajo</Link>}
       <PageHeader
         title={encargo?.nombre || (isClientUser ? "Mis requerimientos" : "Solicitudes PBC")}
         description={
@@ -300,7 +303,7 @@ export default function EncargoDetallePage() {
         onSearchChange={setBusqueda}
         searchPlaceholder="Buscar solicitud..."
         filters={
-          <select value={filtroEstatus} onChange={(e) => setFiltroEstatus(e.target.value)}>
+          <select aria-label="Filtrar por estado" value={filtroEstatus} onChange={(e) => setFiltroEstatus(e.target.value)}>
             <option value="">Todos los estatus</option>
             {ESTATUS_SOLICITUD.map((s) => (
               <option key={s.value} value={s.value}>
