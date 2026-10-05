@@ -4,4 +4,5 @@ import LegacyHome from './LegacyHome';
 import {usePanelUser} from '../../lib/PanelUserContext';
 import OperationalHome from '../../components/panel/OperationalHome';
 import Onboarding from '../../components/panel/Onboarding';
-export default function Home(){const {user}=usePanelUser();return user?.role==='client'?<><Onboarding/><LegacyHome/></>:<Suspense fallback={<p>Cargando inicio…</p>}><OperationalHome/></Suspense>;}
+import {isClientRole} from '../../lib/roles';
+export default function Home(){const {user}=usePanelUser();return isClientRole(user)?<><Onboarding/><LegacyHome/></>:<Suspense fallback={<p>Cargando inicio…</p>}><OperationalHome/></Suspense>;}

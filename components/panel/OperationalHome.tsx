@@ -3,6 +3,7 @@ import {useEffect,useState} from 'react';
 import Link from 'next/link';
 import {usePanelUser} from '../../lib/PanelUserContext';
 import {apiFetch} from '../../lib/api';
+import {isClientRole,isPrivileged} from '../../lib/roles';
 import {attentionHref,currentness,dateLabel,homeQuery,modules,priorities,reportFailure,type OperationalHome as HomeData,type HoursRow} from '../../lib/operational-reporting';
 import PageHeader from './PageHeader';
 import DataTable from './DataTable';
@@ -19,11 +20,11 @@ export default function OperationalHome({pendingOnly=false,hoursOnly=false,clien
  const {user}=usePanelUser();
  const [range,setRange]=useState('month'),[offset,setOffset]=useState(0),[client,setClient]=useState(''),[from,setFrom]=useState(''),[to,setTo]=useState(''),[refresh,setRefresh]=useState(0);
  const [result,setResult]=useState<{key:string;data:HomeData|null;error:string}|null>(null);
- const actor=user?`${user.id}:${user.organization_id}:${user.role}`:'';
+ const actor=user?`${user.id}:${user.organization_id}:${user.role}:${user.is_superuser}`:'';
  const appliedRange=range==='custom'&&(!from||!to)?'month':range;
  const validContext=!clientContextRef||/^[a-f0-9]{64}$/.test(clientContextRef);
  const query=homeQuery(appliedRange,offset,clientContextRef||client,from,to),key=actor+':'+query+':'+refresh;
- const internal=!!user&&user.role!=='client';
+ const internal=!!user&&!isClientRole(user);
  const visible=result?.key===key?result:null;
  useEffect(()=>{
   if(!internal||!actor||!validContext)return;
@@ -39,7 +40,7 @@ export default function OperationalHome({pendingOnly=false,hoursOnly=false,clien
   <div className="uxEyebrow">{data?dateLabel(data.today):'Tu espacio de trabajo'}</div>
   <PageHeader title={clientContextRef?data?.summary.pending_by_client[0]?.client_display||'Cliente de tu alcance':hoursOnly?'Horas':pendingOnly?'Pendientes':'Inicio'} description={hoursOnly?'Consulta el tiempo registrado y prepara una nueva captura.':pendingOnly?'El trabajo que necesita atención, dentro de tu acceso actual.':`Buen día, ${user?.username.split(' ')[0]||''}. Aquí tienes un resumen del trabajo del despacho.`} actions={<Link className="cc-btn cc-btn--solid" href="/panel/time-tracking/registros?nuevo=1">+ Registrar horas</Link>}/>
   {hoursOnly&&<TimeTrackingNav activo="resumen" esPrivilegiado={!!user&&(user.is_superuser||['manager','partner'].includes(user.role||''))}/>}
-  <div className="uxToolbar">{!pendingOnly&&<><label>Rango de horas<select value={range} onChange={e=>{setRange(e.target.value);setOffset(0);}}><option value="today">Hoy</option><option value="week">Semana</option><option value="month">Mes</option><option value="custom">Personalizado</option></select></label>{range==='custom'&&<form className="uxToolbar" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);setFrom(String(f.get('from')));setTo(String(f.get('to')));setOffset(0);}}><label>Desde<input type="date" name="from" required defaultValue={from}/></label><label>Hasta<input type="date" name="to" required defaultValue={to}/></label><button>Aplicar rango</button></form>}</>}<button onClick={()=>{setResult(null);setRefresh(n=>n+1);}} disabled={!visible}>Actualizar</button><span className="uxMuted">{user?.role==='manager'||user?.role==='partner'?'Organización activa · horas del equipo':'Clientes asignados · sólo tus horas'}</span></div>
+  <div className="uxToolbar">{!pendingOnly&&<><label>Rango de horas<select value={range} onChange={e=>{setRange(e.target.value);setOffset(0);}}><option value="today">Hoy</option><option value="week">Semana</option><option value="month">Mes</option><option value="custom">Personalizado</option></select></label>{range==='custom'&&<form className="uxToolbar" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);setFrom(String(f.get('from')));setTo(String(f.get('to')));setOffset(0);}}><label>Desde<input type="date" name="from" required defaultValue={from}/></label><label>Hasta<input type="date" name="to" required defaultValue={to}/></label><button>Aplicar rango</button></form>}</>}<button onClick={()=>{setResult(null);setRefresh(n=>n+1);}} disabled={!visible}>Actualizar</button><span className="uxMuted">{user?.is_superuser?'Todas las organizaciones · horas del equipo':isPrivileged(user)?'Organización activa · horas del equipo':'Clientes asignados · sólo tus horas'}</span></div>
   {!visible?<div className="uxLoading" role="status" aria-busy="true">Consultando pendientes y horas registradas…</div>:visible.error?<ErrorState message={visible.error} onRetry={()=>setRefresh(n=>n+1)}/>:data&&<>
    {hoursOnly?<dl className="uxMetrics"><div><dt>Hoy</dt><dd>{data.hours_today} h</dd></div><div><dt>Semana</dt><dd>{data.hours_week} h</dd></div><div><dt>Mes</dt><dd>{data.hours_month} h</dd></div><div><dt>Rango seleccionado</dt><dd>{data.productivity.logged_hours} h</dd></div></dl>:<dl className="uxMetrics"><div><dt>Pendientes</dt><dd>{data.summary.pending_total}</dd></div><div><dt>Vencidos</dt><dd>{data.summary.overdue_total}</dd></div><div><dt>Por revisar</dt><dd>{data.summary.review_required_total}</dd></div><div><dt>Horas de hoy</dt><dd>{data.hours_today}<small> h registradas</small></dd></div></dl>}
    {!pendingOnly&&<div className={'uxHomeGrid '+(hoursOnly?'uxHomeGrid--hours':'')}>{!hoursOnly&&<section className="uxHomePanel"><div className="uxSectionHead"><h2>Pendientes por cliente</h2><Link href="/panel/trabajo">Ver pendientes →</Link></div>{data.summary.pending_by_client.length?<DataTable rows={data.summary.pending_by_client} getRowKey={c=>c.client_ref} columns={[{key:'client',header:'Cliente',render:c=><Link href={'/panel/clientes/contexto/'+c.client_ref}>{c.client_display}</Link>},{key:'count',header:'Pendientes',align:'right',render:c=>c.count}]}/>:<EmptyState title="Sin pendientes en este alcance" description="Consulta los módulos para revisar sus fuentes y estados."/>}</section>}
@@ -47,7 +48,7 @@ export default function OperationalHome({pendingOnly=false,hoursOnly=false,clien
 
     <p><strong className="uxHoursTotal">{data.productivity.logged_hours} h</strong> <span className="uxMuted">{dateLabel(data.productivity.period.start)} — {dateLabel(data.productivity.period.end)}</span></p>
     <p className="uxMuted">Semana: {data.hours_week} h · Mes: {data.hours_month} h{data.productivity.excluded_records>0?` · ${data.productivity.excluded_records} registros excluidos por su estado o duración`:''}</p>
-    <div className="uxDistributions"><Distribution title={user?.role==='manager'||user?.role==='partner'?'Por persona':'Tus horas'} rows={data.productivity.hours_by_employee} kind="employee"/><Distribution title="Por cliente" rows={data.productivity.hours_by_client} kind="client"/></div>
+    <div className="uxDistributions"><Distribution title={isPrivileged(user)?'Por persona':'Tus horas'} rows={data.productivity.hours_by_employee} kind="employee"/><Distribution title="Por cliente" rows={data.productivity.hours_by_client} kind="client"/></div>
     <details><summary>Horas por fecha</summary><table><caption>Valores del reporte de horas</caption><thead><tr><th scope="col">Fecha</th><th scope="col">Horas registradas</th></tr></thead><tbody>{data.productivity.hours_by_date.map(r=><tr key={r.date}><th scope="row">{dateLabel(r.date||null)}</th><td>{r.logged_hours} h</td></tr>)}</tbody></table></details>
    </section>}
    </div>}

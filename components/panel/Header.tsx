@@ -78,7 +78,7 @@ export default function Header({ onToggleSidebar, onToggleMobile, mobileOpen, co
       <div className="appHeader__right">
         <div className="appHeader__user">
           <span className="appHeader__userName">{user?.username || "..."}</span>
-          <span className="appHeader__userRole">{roleLabel(user?.role)}</span>
+          <span className="appHeader__userRole">{roleLabel(user?.role, user?.is_superuser)}</span>
         </div>
 
         <button type="button" className="cc-btn cc-btn--outline" onClick={logout}>

@@ -90,7 +90,8 @@ export const puedeDarAprobacionFinalPBC = isPrivileged;
  */
 export const puedeCrearOperacion = isPrivileged;
 
-export function roleLabel(role: string | null | undefined): string {
+export function roleLabel(role: string | null | undefined, isSuperuser = false): string {
+  if (isSuperuser) return "Administrador";
   switch (role) {
     case "staff":
       return "Equipo";
