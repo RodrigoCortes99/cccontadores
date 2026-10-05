@@ -123,7 +123,7 @@ export default function DocumentosPage() {
         title="Documentos"
         description={
           isClientUser
-            ? "Todos los documentos que has subido, en todas tus solicitudes."
+            ? "Documentos de los clientes que tienes asignados en el portal."
             : "Consulta originales, versiones y revisión de las solicitudes autorizadas."
         }
       />

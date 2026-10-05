@@ -2,6 +2,7 @@
 // el backend es quien realmente aplica los permisos en cada endpoint.
 
 export type OrganizacionAsignada = { id: number; name: string };
+export type ClienteAsignado = { id: number; name: string; organization_id: number };
 
 export type CurrentUser = {
   id: number;
@@ -15,6 +16,7 @@ export type CurrentUser = {
   organizaciones_asignadas?: OrganizacionAsignada[];
   client_id: number | null;
   client_name: string | null;
+  clientes_asignados?: ClienteAsignado[];
   is_superuser: boolean;
 };
 

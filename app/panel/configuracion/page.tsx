@@ -9,6 +9,8 @@ export default function ConfiguracionPage() {
   const { user } = usePanelUser();
   const puedeAdministrar = canManageUsers(user);
   const puedeVerCatalogos = isPrivileged(user);
+  const clientes = user?.clientes_asignados?.map((c) => c.name)
+    ?? (user?.client_name ? [user.client_name] : []);
 
   return (
     <>
@@ -25,9 +27,9 @@ export default function ConfiguracionPage() {
         <div className="panelCard__item">
           <strong>Rol:</strong> {roleLabel(user?.role)}
         </div>
-        {user?.client_name && (
+        {clientes.length > 0 && (
           <div className="panelCard__item">
-            <strong>Cliente:</strong> {user.client_name}
+            <strong>{clientes.length === 1 ? "Cliente:" : "Clientes:"}</strong> {clientes.join(", ")}
           </div>
         )}
       </div>

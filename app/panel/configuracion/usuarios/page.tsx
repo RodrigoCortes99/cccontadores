@@ -17,6 +17,7 @@ import { useToast } from "../../../../components/panel/Toast";
 import { apiFetch, apiJson } from "../../../../lib/api";
 import { usePanelUser } from "../../../../lib/PanelUserContext";
 import { canManageUsers, puedeAsignarPartner } from "../../../../lib/roles";
+import type { ClienteAsignado } from "../../../../lib/roles";
 
 type Organizacion = { id: number; name: string };
 type Cliente = { id: number; name: string; organization: number };
@@ -37,6 +38,7 @@ type Usuario = {
   organizaciones_asignadas?: Organizacion[];
   client_id: number | null;
   client_nombre: string | null;
+  clientes_asignados?: ClienteAsignado[];
   is_active: boolean;
   is_superuser: boolean;
   date_joined: string;
@@ -68,7 +70,7 @@ type FormState = {
   // staff/senior (ver ROLES_MULTI_ORGANIZACION). Ids como string, igual que
   // el resto de los selects de este formulario.
   organizaciones: string[];
-  cliente: string;
+  clientes: string[];
   is_active: boolean;
 };
 
@@ -82,7 +84,7 @@ function formVacio(organizacionPredeterminada: string): FormState {
     role: "staff",
     organization: organizacionPredeterminada,
     organizaciones: organizacionPredeterminada ? [organizacionPredeterminada] : [],
-    cliente: "",
+    clientes: [],
     is_active: true,
   };
 }
@@ -173,9 +175,14 @@ export default function UsuariosPage() {
 
   const clientesDeLaOrganizacion = useMemo(() => {
     const orgId = form.organization ? Number(form.organization) : null;
-    if (!orgId) return clientes;
-    return clientes.filter((c) => c.organization === orgId);
-  }, [clientes, form.organization]);
+    // Keep previously assigned inactive clients visible when editing. Editing
+    // another field must not silently remove an existing portal assignment.
+    const existentes = (editando?.clientes_asignados || []).map((c) => ({
+      id: c.id, name: c.name, organization: c.organization_id,
+    }));
+    const opciones = Array.from(new Map([...clientes, ...existentes].map((c) => [c.id, c])).values());
+    return orgId ? opciones.filter((c) => c.organization === orgId) : opciones;
+  }, [clientes, form.organization, editando]);
 
   // Un superusuario puede asignar varias organizaciones, pero solo tiene
   // sentido para staff/senior/manager/partner (ver ROLES_MULTI_ORGANIZACION).
@@ -224,7 +231,9 @@ export default function UsuariosPage() {
       role: u.role,
       organization: u.organization ? String(u.organization) : "",
       organizaciones: (u.organizaciones_asignadas || []).map((org) => String(org.id)),
-      cliente: u.client_id ? String(u.client_id) : "",
+      clientes: u.clientes_asignados
+        ? u.clientes_asignados.map((c) => String(c.id))
+        : u.client_id ? [String(u.client_id)] : [],
       is_active: u.is_active,
     });
     setModalAbierto(true);
@@ -249,8 +258,8 @@ export default function UsuariosPage() {
       setErrorForm("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
-    if (form.role === "client" && !form.cliente) {
-      setErrorForm("Selecciona el cliente asociado a este usuario.");
+    if (!editando && form.role === "client" && form.clientes.length === 0) {
+      setErrorForm("Selecciona al menos un cliente asociado a este usuario.");
       return;
     }
 
@@ -263,7 +272,7 @@ export default function UsuariosPage() {
         last_name: form.last_name.trim(),
         role: form.role,
         is_active: form.is_active,
-        cliente: form.role === "client" ? Number(form.cliente) : null,
+        clientes: form.role === "client" ? form.clientes.map(Number) : [],
       };
 
       if (user?.is_superuser && form.organization) {
@@ -339,7 +348,7 @@ export default function UsuariosPage() {
         );
       },
     },
-    { key: "cliente", header: "Cliente", render: (u) => u.client_nombre || "—" },
+    { key: "cliente", header: "Clientes", render: (u) => u.clientes_asignados?.map((c) => c.name).join(", ") || u.client_nombre || "—" },
     {
       key: "estatus",
       header: "Estatus",
@@ -483,7 +492,7 @@ export default function UsuariosPage() {
 
           <FormGrid>
             <FormField label="Rol" required>
-              <select value={form.role} onChange={(e) => setForm((prev) => ({ ...prev, role: e.target.value }))} required>
+              <select value={form.role} onChange={(e) => setForm((prev) => ({ ...prev, role: e.target.value, clientes: e.target.value === "client" ? prev.clientes : [] }))} required>
                 {rolesAsignables.map((r) => (
                   <option key={r.value} value={r.value}>
                     {r.label}
@@ -504,7 +513,7 @@ export default function UsuariosPage() {
               >
                 <select
                   value={form.organization}
-                  onChange={(e) => setForm((prev) => ({ ...prev, organization: e.target.value, cliente: "" }))}
+                  onChange={(e) => setForm((prev) => ({ ...prev, organization: e.target.value, clientes: [] }))}
                   required
                 >
                   <option value="">Selecciona una organización</option>
@@ -539,15 +548,19 @@ export default function UsuariosPage() {
           )}
 
           {form.role === "client" && (
-            <FormField label="Cliente asociado" required hint="El usuario podrá ver únicamente los encargos de este cliente.">
-              <select value={form.cliente} onChange={(e) => setForm((prev) => ({ ...prev, cliente: e.target.value }))} required>
-                <option value="">Selecciona un cliente</option>
-                {clientesDeLaOrganizacion.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+            <FormField label="Clientes asociados" required={!editando} hint="El usuario verá únicamente los encargos, solicitudes y documentos de los clientes seleccionados de esta organización. Si retiras todos, quedará sin acceso al portal.">
+              <MultiSelect
+                options={clientesDeLaOrganizacion}
+                value={form.clientes}
+                onChange={(clientes) => setForm((prev) => ({ ...prev, clientes }))}
+                placeholder="Selecciona uno o varios clientes"
+                searchPlaceholder="Buscar cliente..."
+                emptyMessage="No hay clientes en esta organización."
+                ariaLabel="Clientes asociados"
+                singularLabel="cliente"
+                pluralLabel="clientes"
+                selectionGender="masculine"
+              />
             </FormField>
           )}
 

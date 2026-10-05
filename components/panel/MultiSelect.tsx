@@ -17,6 +17,7 @@ type Props = {
   /** Sustantivo (femenino) usado en el resumen "N ___ seleccionada(s)". */
   singularLabel?: string;
   pluralLabel?: string;
+  selectionGender?: "feminine" | "masculine";
 };
 
 /**
@@ -35,6 +36,7 @@ export default function MultiSelect({
   ariaLabel,
   singularLabel = "opción",
   pluralLabel = "opciones",
+  selectionGender = "feminine",
 }: Props) {
   const [open, setOpen] = useState(false);
   const [busqueda, setBusqueda] = useState("");
@@ -90,8 +92,10 @@ export default function MultiSelect({
     if (e.key === "Escape") {
       // Evita que el Escape también cierre el <Modal> que envuelve este
       // selector: solo debe cerrarse el panel del selector.
+      e.preventDefault();
       e.stopPropagation();
       setOpen(false);
+      wrapRef.current?.querySelector<HTMLButtonElement>(".multiSelect__trigger")?.focus();
     }
   }
 
@@ -114,7 +118,7 @@ export default function MultiSelect({
         <span className="multiSelect__triggerText">
           {seleccionados.length === 0
             ? placeholder
-            : `${seleccionados.length} ${seleccionados.length === 1 ? singularLabel : pluralLabel} seleccionada${
+            : `${seleccionados.length} ${seleccionados.length === 1 ? singularLabel : pluralLabel} seleccionad${selectionGender === "masculine" ? "o" : "a"}${
                 seleccionados.length === 1 ? "" : "s"
               }`}
         </span>
