@@ -25,7 +25,7 @@ export function returnPath(search:string){return workspacePath+'?'+navigationQue
 // Automation engine vocabulary. Kept here (not inside the component) so the exact
 // wording of every match type, draft state and field is unit-tested: a person must
 // never read "coincidencia" where the server said conflict, ambiguity or missing data.
-export const matchLabels:Record<string,string>={EXACT_MATCH:'Coincidencia exacta',STRONG_MATCH:'Coincidencia fuerte · confirmar proveedor',AMBIGUOUS:'Ambigua · elegir candidato',NO_MATCH:'Sin CFDI',INSUFFICIENT_EVIDENCE:'Evidencia insuficiente',CONFLICT:'Conflicto'};
+export const matchLabels:Record<string,string>={AMOUNT_DATE:'Importe y fecha coincidentes · requiere confirmación',EXACT_MATCH:'Coincidencia exacta',STRONG_MATCH:'Coincidencia fuerte · confirmar proveedor',AMBIGUOUS:'Ambigua · elegir candidato',NO_MATCH:'Sin CFDI',INSUFFICIENT_EVIDENCE:'Evidencia insuficiente',CONFLICT:'Conflicto'};
 export const draftLabels:Record<string,string>={READY_FOR_REVIEW:'Lista para revisión',NEEDS_INFORMATION:'Falta información',AMBIGUOUS_DOCUMENT_MATCH:'Documento ambiguo',AMOUNT_DIFFERENCE:'Diferencia de importe',MISSING_SUPPORT:'Falta soporte',MISSING_CFDI:'Falta CFDI',PERIOD_REVIEW_REQUIRED:'Confirmar periodo',ACCOUNT_REVIEW_REQUIRED:'Cuenta por revisar'};
 export const proposalStatusLabels:Record<string,string>={PROPOSED:'Propuesta',ACCEPTED:'Aceptada por una persona',REJECTED:'Rechazada',CORRECTED:'Corregida por una persona',SUPERSEDED:'Superada por otro lote'};
 export const fieldLabels:Record<string,string>={amount:'importe',amount_sum:'suma exacta',currency:'moneda',supplier:'proveedor',rfc:'RFC',reference:'referencia',period:'periodo',adjacent_period:'mes adyacente',date:'fecha',tipo_comprobante:'tipo',duplicate_uuid:'UUID duplicado',already_associated:'ya asociado',shared_candidate:'CFDI reclamado por varios pagos',human_confirmation:'confirmación humana',total:'importe legible'};
@@ -49,3 +49,6 @@ export function coverageNote(value:{truncated?:boolean;count?:number;limit?:numb
 // An unknown code is shown verbatim, never as an empty string or an invented meaning.
 export function label(table:Record<string,string>,code:string){return table[code]??code.replaceAll('_',' ');}
 export function fieldList(list:string[]){return list.map(f=>label(fieldLabels,f)).join(', ')||'\u2014';}
+
+export const runLabels:Record<string,string>={COMPLETED:'Cálculo terminado',COMPLETE:'Cálculo terminado',SUCCESS:'Cálculo terminado',DONE:'Cálculo terminado',PARTIAL:'Cálculo con pendientes por revisar',PENDING:'Pendiente de cálculo',RUNNING:'Calculando',FAILED:'No se pudo completar el cálculo',SOURCE_WITHDRAWN:'Fuente retirada · recalcular',STALE:'Fuentes cambiaron · recalcular'};
+export function runLabel(code:string){return runLabels[code]||'Estado de cálculo por revisar';}

@@ -1,5 +1,6 @@
 "use client";
 
+import {formErrorMessage} from '@/lib/formErrors';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, apiForm, apiJson } from "../../../lib/api";
 import { usePanelUser } from "../../../lib/PanelUserContext";
@@ -29,7 +30,7 @@ const dateLabel = (value: string) => new Date(value).toLocaleString('es-MX', { d
 
 async function read<T>(response: Response): Promise<T> {
   const data = await response.json();
-  if (!response.ok) throw new Error(`${response.status}: ${typeof data.detail === 'string' ? data.detail : JSON.stringify(data)}`);
+  if (!response.ok) throw new Error(formErrorMessage(data));
   return data as T;
 }
 

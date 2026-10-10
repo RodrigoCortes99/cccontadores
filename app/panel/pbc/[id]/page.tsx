@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import PbcHistory from "@/components/panel/PbcHistory";
+import RecoveryPanel from "@/components/panel/RecoveryPanel";
 import PageHeader from "../../../../components/panel/PageHeader";
 import LoadingState from "../../../../components/panel/LoadingState";
 import ErrorState from "../../../../components/panel/ErrorState";
@@ -25,6 +27,8 @@ type Solicitud = {
   estatus_calculado: string;
   estatus_calculado_display: string;
   fecha_compromiso: string | null;
+  lifecycle?: string;
+  lifecycle_reason?: string;
   documentos_count: number;
   documentos_aprobados_count: number;
   documentos_con_observaciones_count: number;
@@ -192,7 +196,8 @@ export default function DocumentosPBCPage() {
 
       const res = await apiFetch(`/api/pbc/${id}/documentos/subir/`, {
         method: "POST",
-        body: formData,
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(Object.fromEntries(formData.entries())),
       });
 
       const data = await res.json();
@@ -265,13 +270,15 @@ export default function DocumentosPBCPage() {
                 Volver al encargo
               </Link>
             )}
-            <button type="button" className="cc-btn cc-btn--solid" onClick={abrirModal}>
+            <RecoveryPanel requestId={Number(id)} onComplete={cargar}/><PbcHistory requestId={Number(id)}/>
+            <button type="button" disabled={!!solicitud?.lifecycle && solicitud.lifecycle!=="ACTIVE"} className="cc-btn cc-btn--solid" onClick={abrirModal}>
               Subir documento
             </button>
           </>
         }
       />
 
+      {solicitud?.lifecycle && solicitud.lifecycle!=="ACTIVE" && <p role="status" className="panelCard">Solicitud {solicitud.lifecycle==="CANCELLED"?"cancelada":"archivada"}. {solicitud.lifecycle_reason} No admite cargas ni descargas nuevas; conserva el historial.</p>}
       {solicitud && (
         <div className="statGrid">
           <div className="statCard">

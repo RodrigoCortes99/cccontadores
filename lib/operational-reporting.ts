@@ -10,8 +10,17 @@ const uuid='[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
 const exact = new RegExp(`^/panel/(?:auditoria/${uuid}|facturacion/(?:facturas|cobros)/${uuid}|nomina/(?:corridas|seguridad-social|importaciones)/${uuid})$`,'i');
 const landings=new Set(['/panel/documentos','/panel/carova/egresos','/panel/facturacion','/panel/nomina']);
 export function attentionHref(row:Pick<Attention,'action_url'|'module_route'>):string|null {
-  // Never repair an unsafe supplied action into a guessed route or numeric PK.
-  if(row.action_url!==null)return typeof row.action_url==='string'&&exact.test(row.action_url)?row.action_url:null;
+  // Native PBC/expense routes already use numeric IDs and reauthorize the destination.
+  // Never derive a numeric identifier from an opaque reference or accept arbitrary URLs.
+  if(row.action_url!==null){
+    const path=row.action_url;if(typeof path!=='string')return null;
+    if(exact.test(path)||/^\/panel\/(?:pbc|documentos|carova\/egresos)\/[1-9][0-9]*$/.test(path))return path;
+    if(path.startsWith('/panel/carova/egresos?')){
+      const q=new URLSearchParams(path.split('?')[1]);
+      if(q.size===3&&q.get('tab')==='Periodos'&&/^[1-9][0-9]*$/.test(q.get('accounting_period')||'')&&['Automatización','Bancos / Conciliación','IVA','Contabilidad'].includes(q.get('section')||'')&&!path.includes('#'))return path;
+    }
+    return null;
+  }
   return landings.has(row.module_route||'')?row.module_route:null;
 }
 export function dateLabel(value:string|null):string {

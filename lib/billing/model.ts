@@ -2,8 +2,11 @@ export type Row = Record<string, unknown>;
 export function object(value: unknown): Row { return value && typeof value === 'object' && !Array.isArray(value) ? value as Row : {}; }
 export function rows(value: unknown): Row[] { return Array.isArray(value) ? value.map(object) : []; }
 const labels:Record<string,string>={
+ true:'Sí',false:'No',
+ MANUAL_DECLARATION_NOT_FORMAL_SUFFICIENCY:'Declaración manual; suficiencia formal no demostrada',
+ TRASLADO:'Traslado',RETENCION:'Retención',
  DRAFT:'Borrador',PENDING_APPROVAL:'Pendiente de aprobación',APPROVED:'Aprobado',VOID:'Descartado',
- OPEN:'Abierta',PARTIALLY_PAID:'Pagada parcialmente',PARTIALLY_PAID_OVERDUE:'Parcial y vencida',PAID:'Pagada',OVERDUE:'Vencida',OVERPAID:'Sobrepagada',NOT_APPLICABLE:'No aplica antes de aprobación',NOT_INTEGRATED:'Sin integración fiscal',
+ CREDITED:'Compensada · sin saldo por cobrar',CREDITED_WITH_PAYMENT:'Compensada · revisar cobro o saldo a favor',OPEN:'Abierta',PARTIALLY_PAID:'Pagada parcialmente',PARTIALLY_PAID_OVERDUE:'Parcial y vencida',PAID:'Pagada',OVERDUE:'Vencida',OVERPAID:'Sobrepagada',NOT_APPLICABLE:'No aplica antes de aprobación',NOT_INTEGRATED:'Sin integración fiscal',
  ACTIVE:'Activo',VOIDED:'Anulado',MANUAL_DECLARATION:'Declaración manual',BANK_MOVEMENT:'Fuente bancaria confirmada',
  COLLECTION_NOT_DEMONSTRABLE:'Sin aplicación de cobro demostrada',BANK_LINKED_COLLECTION_REQUIRES_SOURCE_REVIEW:'Cobro bancario: verificar fuente',MANUAL_DECLARATION_REQUIRES_VERIFICATION:'Declaración manual, requiere verificación',
  CURRENT:'Vigente',NEEDS_REVIEW:'Necesita revisión',STALE:'Archivo obsoleto',SOURCE_NOT_AUTHORIZED:'Fuente no disponible en tu alcance',UNCONFIRMED:'Sin confirmar',NOT_CONFIRMED:'Sin confirmación',COLLECTION_REGISTERED:'Cobro registrado',
@@ -13,11 +16,12 @@ const labels:Record<string,string>={
  ISSUER_FISCAL_IDENTITY_NOT_DEMONSTRABLE:'Falta identidad fiscal vigente del emisor',ISSUER_FISCAL_IDENTITY_AMBIGUOUS:'Hay varias identidades vigentes del emisor',CUSTOMER_FISCAL_IDENTITY_NOT_DEMONSTRABLE:'Falta identidad fiscal vigente del receptor',CUSTOMER_FISCAL_IDENTITY_AMBIGUOUS:'Hay varias identidades vigentes del receptor',FISCAL_DATA_INCOMPLETE:'Completa los datos fiscales declarados',SERIES_NOT_AVAILABLE:'Selecciona una serie vigente',SERIES_AMBIGUOUS:'Hay varias series posibles; elige explícitamente',SEQUENCE_NOT_AVAILABLE:'La serie no tiene consecutivo disponible',SEQUENCE_AMBIGUOUS:'El consecutivo requiere revisión',PRICE_NOT_DEMONSTRABLE:'No hay precio vigente en la fecha declarada',LINE_SOURCE_MISMATCH:'El concepto no corresponde a su fuente de precio',SAT_PRODUCT_KEY_NOT_DECLARED:'Declara la clave de producto del concepto',SAT_UNIT_KEY_NOT_DECLARED:'Declara la clave de unidad del concepto',LINE_CALCULATION_MISMATCH:'La línea requiere revisión del cálculo',
  NO_LINES:'Añade al menos una línea',SOURCE_PRICE_CHANGED:'La tarifa cambió; acepta el precio vigente explícitamente',
  EXACT_BALANCE_AMOUNT:'El importe coincide con el saldo',SAME_CURRENCY:'Misma moneda',DATE_DISTANCE:'Distancia entre fechas',REFERENCE_SERIES_FOLIO_TEXT:'Referencia coincide con serie y folio',COUNTERPARTY_DISPLAY_TEXT:'Texto de contraparte coincide',
+ billing_invoice_compensated:'Factura compensada',billing_invoice_updated:'Borrador actualizado',billing_bank_collection_confirmed:'Cobro bancario confirmado',billing_collection_corrected:'Cobro corregido',billing_collection_created:'Cobro declarado',billing_collection_voided:'Cobro anulado',billing_payment_application_created:'Aplicación registrada',billing_payment_application_reversed:'Aplicación reversada',
  billing_invoice_created:'Borrador creado',billing_invoice_line_added:'Línea agregada',billing_invoice_line_updated:'Línea actualizada',billing_invoice_line_removed:'Línea retirada',billing_invoice_submitted:'Enviado a aprobación',billing_invoice_approved:'Factura aprobada',billing_invoice_returned:'Devuelto a borrador',billing_invoice_voided:'Documento descartado'
 };
 export function text(value: unknown): string { return value === null || value === undefined || typeof value === 'object' ? '—' : String(value); }
 export function label(value: unknown):string {return labels[text(value)]||text(value);}
-export function display(key:string,value:unknown):string {return ['status','collection_state','fiscal_state','source','evidence_status','collection_evidence','source_currentness','application_kind','action'].includes(key)?label(value):text(value);}
+export function display(key:string,value:unknown):string {if(typeof value==='boolean')return value?'Sí':'No';return ['kind','status','collection_state','fiscal_state','source','evidence_status','collection_evidence','source_currentness','application_kind','action'].includes(key)?label(value):text(value);}
 
 export const opaque = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 export function reference(value: unknown): string { if (typeof value !== 'string' || !opaque.test(value)) throw new Error('Referencia no disponible.'); return value; }

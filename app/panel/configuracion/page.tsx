@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import CatalogActivation from "@/components/audit/CatalogActivation";
 import PageHeader from "../../../components/panel/PageHeader";
 import { usePanelUser } from "../../../lib/PanelUserContext";
 import { canManageUsers, isPrivileged, roleLabel } from "../../../lib/roles";
@@ -43,9 +44,11 @@ export default function ConfiguracionPage() {
         </div>
       )}
 
+      {puedeVerCatalogos && <div className="panelCard"><h2>Configuración operativa</h2><Link href="/panel/configuracion/contabilidad" className="cc-btn cc-btn--outline">Catálogo y reglas contables</Link><CatalogActivation onComplete={()=>{}}/></div>}
       {puedeAdministrar && (
         <div className="panelCard">
           <h2>Administración</h2>
+
           <div className="quickActionsGrid">
             <Link href="/panel/configuracion/usuarios" className="cc-btn cc-btn--solid">
               Usuarios

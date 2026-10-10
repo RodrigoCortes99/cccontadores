@@ -1,7 +1,8 @@
 'use client';
+import Link from 'next/link';
 import {useCallback,useEffect,useState,type FormEvent} from 'react';
 import {apiFetch,apiJson} from '../../../../lib/api';
-import {apiErrorMessage} from './ux';
+import {apiErrorMessage,runLabel} from './ux';
 import s from './workspace.module.css';
 
 // El identificador que llega puede ser una referencia pública opaca (cadena) con alcance
@@ -43,6 +44,7 @@ export default function AccountingPanel({periodId,onFile}:{periodId:number;onFil
 
  return <section className={s.section}>
   <h3>Contabilidad · preparación de pólizas</h3>
+  <Link className="cc-btn cc-btn--ghost" href="/panel/configuracion/contabilidad">Administrar catálogo, equivalencias y reglas</Link>
   <p>{data?.notice??'Borradores de asiento construidos con evidencia autorizada y configuración aprobada. No es contabilidad registrada.'}</p>
   {error&&<p role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}
   {data&&<>
@@ -50,7 +52,7 @@ export default function AccountingPanel({periodId,onFile}:{periodId:number;onFil
    <div className={s.toolbar}><button disabled={busy} onClick={()=>void run()}>Preparar pólizas</button>{data.run&&<><button disabled={busy} onClick={()=>void exportFile('xlsx')}>Papel de trabajo XLSX</button><button disabled={busy} onClick={()=>void exportFile('csv')}>CSV</button></>}</div>
    {!data.run&&<p>Todavía no se han preparado las pólizas de este periodo.</p>}
    {data.run&&<>
-    <h4>Lote {data.run.id} · {data.run.status}</h4>
+    <h4>Lote {data.run.id} · {runLabel(data.run.status)}</h4>
     {/* Con alcance parcial el panel no muestra ningún número de resultados retirados: el
         servidor no lo envía, y contarlos aquí volvería a abrir el canal lateral. */}
     <p>{data.results_count} póliza{data.results_count===1?'':'s'} preparada{data.results_count===1?'':'s'}{!data.scope_limited&&(data.withheld_results??0)>0?` · ${data.withheld_results} fuera de tu alcance`:''}</p>

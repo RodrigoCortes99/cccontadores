@@ -1,5 +1,6 @@
 "use client";
 
+import {formErrorMessage} from '@/lib/formErrors';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "../../../../components/panel/PageHeader";
@@ -146,7 +147,7 @@ export default function CatalogosTimeTrackingPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(typeof data === "object" ? JSON.stringify(data) : "No fue posible crear el elemento.");
+        setError(formErrorMessage(data, "No fue posible crear el elemento."));
         return;
       }
 

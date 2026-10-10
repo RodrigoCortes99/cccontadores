@@ -1,0 +1,11 @@
+/** Render validation content as field-level prose, never raw JSON or arbitrary server traces. */
+const fields:Record<string,string>={client_id:'Cliente',organization_id:'Organización',engagement_id:'Encargo',reason:'Motivo',name:'Nombre',code:'Código',duration_minutes:'Duración (minutos)',date:'Fecha',description:'Descripción',activity_type:'Tipo de actividad',client:'Cliente',employee:'Empleado',non_field_errors:'Validación',detail:'Operación',effective_from:'Inicio de vigencia',effective_to:'Fin de vigencia',year:'Año',month:'Mes',title:'Título',area:'Área',servicio:'Servicio',bank_account_id:'Cuenta bancaria',account_text:'Clasificación',lines:'Partidas',provenance:'Procedencia',rule_key:'Clave de regla',username:'Usuario',email:'Correo',password:'Contraseña',organization:'Organización',role:'Rol',encargo:'Encargo',titulo:'Título',fecha_compromiso:'Fecha compromiso',periodo_inicio:'Inicio de periodo',periodo_fin:'Fin de periodo',tipo:'Tipo',rfc:'RFC',industry:'Actividad',source:'Fuente',__all__:'Validación'};
+function translate(v:string):string { const common:Record<string,string>={'This field is required.':'Falta este dato. Completa el campo antes de guardar.','A valid integer is required.':'Debe ser un número entero. Corrige el valor sin decimales.','This field may not be blank.':'No puede quedar vacío. Escribe el dato solicitado.','Enter a valid email address.':'El formato del correo es inválido. Usa nombre@dominio.','Ensure this value is greater than or equal to 0.':'El valor debe ser cero o positivo. Corrige el importe.'};return common[v]||v;}
+function messages(v:unknown):string[]{if(typeof v==='string'&&v.length<1000&&!/[{}\n]|Traceback|Exception|SELECT\s|INSERT\s/i.test(v))return [translate(v)];if(Array.isArray(v))return v.flatMap(messages);return [];}
+export function formErrorMessage(data:unknown,fallback='No se pudo guardar. Revisa los campos y vuelve a intentar.'):string{
+ if(!data||typeof data!=='object')return fallback;
+ const d=data as Record<string,unknown>;
+ const collected=Object.entries(d).filter(([k])=>k in fields).flatMap(([k,v])=>messages(v).map(m=>`${fields[k]}: ${m}`));
+ if(collected.length)return collected.join(' ');
+ const m=messages(d.message);return m.length?m.join(' '):fallback;
+}

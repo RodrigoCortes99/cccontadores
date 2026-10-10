@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import RecoveryPanel from "@/components/panel/RecoveryPanel";
 import PageHeader from "../../../../components/panel/PageHeader";
 import LoadingState from "../../../../components/panel/LoadingState";
 import ErrorState from "../../../../components/panel/ErrorState";
@@ -25,6 +26,9 @@ type Documento = {
   version: number;
   nombre: string;
   archivo: string;
+  estatus?: string;
+  download_available?: boolean;
+  withdrawal_reason?: string;
   estatus_revision: string;
   estatus_revision_display: string;
   revisado_por: string | null;
@@ -273,7 +277,8 @@ export default function DocumentoDetallePage() {
 
       const res = await apiFetch(`/api/pbc/${documento.solicitud}/documentos/subir/`, {
         method: "POST",
-        body: formData,
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(Object.fromEntries(formData.entries())),
       });
 
       const data = await res.json();
@@ -321,17 +326,19 @@ export default function DocumentoDetallePage() {
             <Link className="cc-btn cc-btn--outline" href={`/panel/pbc/${documento.solicitud}`}>
               Volver a la solicitud
             </Link>
-            <button type="button" className="cc-btn cc-btn--outline" onClick={abrirArchivo}>
+            <button type="button" className="cc-btn cc-btn--outline" onClick={abrirArchivo} disabled={documento.download_available===false}>
               Ver archivo
             </button>
-            <PresentationAction source={{kind:'documentos',ref:String(documento.id)}}/>
-            <button type="button" className="cc-btn cc-btn--solid" onClick={abrirModalSubir}>
+            {documento.download_available!==false&&<PresentationAction source={{kind:'documentos',ref:String(documento.id)}}/>}
+            <RecoveryPanel documentId={documento.id} onComplete={cargar}/>
+            <button type="button" className="cc-btn cc-btn--solid" onClick={abrirModalSubir} disabled={documento.download_available===false}>
               Subir nueva versión
             </button>
           </>
         }
       />
 
+      {documento.download_available===false&&<p role="status" className="panelCard">Documento retirado o solicitud cerrada. {documento.withdrawal_reason} Se conservan metadata e historial; las nuevas descargas están bloqueadas.</p>}
       <div className="statGrid">
         <div className="statCard">
           <p className="statCard__label">Estatus de revisión</p>
@@ -371,7 +378,7 @@ export default function DocumentoDetallePage() {
                 <p>{c.texto}</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <StatusBadge label={c.resuelto ? "Resuelto" : "Pendiente"} tone={c.resuelto ? "green" : "yellow"} />
-                  {puedeRevisar && (
+                  {puedeRevisar && documento.download_available!==false && (
                     <button
                       type="button"
                       className="cc-btn cc-btn--outline"
@@ -394,14 +401,14 @@ export default function DocumentoDetallePage() {
                 />
               </FormField>
               <div className="pageActions">
-                <button type="submit" className="loginButton" disabled={enviandoComentario || !nuevoComentario.trim()}>
+                <button type="submit" className="loginButton" disabled={documento.download_available===false || enviandoComentario || !nuevoComentario.trim()}>
                   {enviandoComentario ? "Enviando..." : "Comentar"}
                 </button>
               </div>
             </form>
           </div>
 
-          {puedeRevisar && (
+          {puedeRevisar && documento.download_available!==false && (
             <div className="panelCard">
               <h2>Cambiar estatus de revisión</h2>
               <form onSubmit={handleGuardarEstatus} className="uploadForm">

@@ -1,5 +1,6 @@
 "use client";
 
+import {formErrorMessage} from '@/lib/formErrors';
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import PageHeader from "../../../../components/panel/PageHeader";
@@ -172,7 +173,7 @@ function MisRegistrosContent() {
       const data = await res.json();
 
       if (!res.ok) {
-        setErrorForm(typeof data === "object" ? JSON.stringify(data) : "No fue posible guardar el registro.");
+        setErrorForm(formErrorMessage(data, "No fue posible guardar el registro."));
         return;
       }
 
@@ -211,7 +212,7 @@ function MisRegistrosContent() {
       const data = await res.json();
 
       if (!res.ok) {
-        showError(typeof data === "object" ? JSON.stringify(data) : "No fue posible actualizar el registro.");
+        showError(formErrorMessage(data, "No fue posible actualizar el registro."));
         return;
       }
 
@@ -254,7 +255,7 @@ function MisRegistrosContent() {
       const data = await res.json();
 
       if (!res.ok) {
-        showError(typeof data === "object" ? JSON.stringify(data) : "No fue posible guardar la revisión.");
+        showError(formErrorMessage(data, "No fue posible guardar la revisión."));
         return;
       }
 

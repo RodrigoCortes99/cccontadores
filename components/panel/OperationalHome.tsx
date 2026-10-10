@@ -11,6 +11,7 @@ import ErrorState from './ErrorState';
 import EmptyState from './EmptyState';
 import Onboarding from './Onboarding';
 import TimeTrackingNav from '../TimeTrackingNav';
+import BooksAttention from '../books/BooksAttention';
 
 function Distribution({title,rows,kind}:{title:string;rows:HoursRow[];kind:'employee'|'client'}) {
  const max=Math.max(1,...rows.map(r=>Number(r.logged_hours)));
@@ -39,6 +40,7 @@ export default function OperationalHome({pendingOnly=false,hoursOnly=false,clien
  return <div className="uxHome">
   <div className="uxEyebrow">{data?dateLabel(data.today):'Tu espacio de trabajo'}</div>
   <PageHeader title={clientContextRef?data?.summary.pending_by_client[0]?.client_display||'Cliente de tu alcance':hoursOnly?'Horas':pendingOnly?'Pendientes':'Inicio'} description={hoursOnly?'Consulta el tiempo registrado y prepara una nueva captura.':pendingOnly?'El trabajo que necesita atención, dentro de tu acceso actual.':`Buen día, ${user?.username.split(' ')[0]||''}. Aquí tienes un resumen del trabajo del despacho.`} actions={<Link className="cc-btn cc-btn--solid" href="/panel/time-tracking/registros?nuevo=1">+ Registrar horas</Link>}/>
+  {!hoursOnly&&!pendingOnly&&!clientContextRef&&<BooksAttention/>}
   {hoursOnly&&<TimeTrackingNav activo="resumen" esPrivilegiado={!!user&&(user.is_superuser||['manager','partner'].includes(user.role||''))}/>}
   <div className="uxToolbar">{!pendingOnly&&<><label>Rango de horas<select value={range} onChange={e=>{setRange(e.target.value);setOffset(0);}}><option value="today">Hoy</option><option value="week">Semana</option><option value="month">Mes</option><option value="custom">Personalizado</option></select></label>{range==='custom'&&<form className="uxToolbar" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);setFrom(String(f.get('from')));setTo(String(f.get('to')));setOffset(0);}}><label>Desde<input type="date" name="from" required defaultValue={from}/></label><label>Hasta<input type="date" name="to" required defaultValue={to}/></label><button>Aplicar rango</button></form>}</>}<button onClick={()=>{setResult(null);setRefresh(n=>n+1);}} disabled={!visible}>Actualizar</button><span className="uxMuted">{user?.is_superuser?'Todas las organizaciones · horas del equipo':isPrivileged(user)?'Organización activa · horas del equipo':'Clientes asignados · sólo tus horas'}</span></div>
   {!visible?<div className="uxLoading" role="status" aria-busy="true">Consultando pendientes y horas registradas…</div>:visible.error?<ErrorState message={visible.error} onRetry={()=>setRefresh(n=>n+1)}/>:data&&<>

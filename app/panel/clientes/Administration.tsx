@@ -1,5 +1,6 @@
 "use client";
 
+import {formErrorMessage} from '@/lib/formErrors';
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import PageHeader from "../../../components/panel/PageHeader";
@@ -164,7 +165,7 @@ export default function ClientesPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setErrorForm(typeof data === "object" ? JSON.stringify(data) : "No fue posible guardar el cliente.");
+        setErrorForm(formErrorMessage(data, "No fue posible guardar el cliente."));
         return;
       }
 

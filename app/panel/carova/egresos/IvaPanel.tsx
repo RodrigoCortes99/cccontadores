@@ -1,7 +1,7 @@
 'use client';
 import {useCallback,useEffect,useState,type FormEvent} from 'react';
 import {apiFetch,apiJson} from '../../../../lib/api';
-import {apiErrorMessage} from './ux';
+import {apiErrorMessage,runLabel} from './ux';
 import {vatStatusLabels as STATUS,vatPendingLabels as PENDING,vatLabel as label,vatResultText} from './ivaUx';
 import s from './workspace.module.css';
 
@@ -10,7 +10,7 @@ type Difference={code:string;difference?:string;[k:string]:unknown};
 // y el identificador interno cuando es completo. El panel lo trata siempre como opaco:
 // no lo convierte a número, no lo ordena ni lo compara por magnitud.
 type PublicRef=string|number;
-type Result={id:PublicRef;document_id:number;status:string;snapshot_status:string;state?:string|null;state_reason?:string|null;state_notice?:string|null;projection_version:string;material_version:string;claimed_by:string[];differences:Difference[];arithmetic:Difference[];signals:string[];sources:Record<string,unknown>};
+type Result={id:PublicRef;document_id:number;document_name?:string;status:string;snapshot_status:string;state?:string|null;state_reason?:string|null;state_notice?:string|null;projection_version:string;material_version:string;claimed_by:string[];differences:Difference[];arithmetic:Difference[];signals:string[];sources:Record<string,unknown>};
 type Draft={title:string;body:string;audience:string;persisted:boolean;notice:string};
 type Pending={id:PublicRef;code:string;label:string;what_is_missing:string;why_it_blocks:string;resolver:string;revision:number;document_id:number|null;clarification_draft:Draft};
 type Body={period:{label:string;client:string};run:{id:number;status:string;engine:string}|null;summary:Record<string,unknown>;results:Result[];results_count:number;withheld_results?:number;withheld_notice?:string|null;scope_limited?:boolean;scope_notice?:string|null;pendings:Pending[];stale_results:PublicRef[];evidence_changed_documents:number[];scope:string;notice:string;permissions:{manage:boolean}};
@@ -34,7 +34,7 @@ export default function IvaPanel({periodId,onFile}:{periodId:number;onFile:(url:
    <div className={s.toolbar}><button disabled={busy} onClick={()=>void run()}>Calcular revisión de IVA</button>{data.run&&<><button disabled={busy} onClick={()=>void exportFile('xlsx')}>Papel de trabajo XLSX</button><button disabled={busy} onClick={()=>void exportFile('csv')}>CSV</button></>}</div>
    {!data.run&&<p>Todavía no hay una revisión estructural de IVA para este periodo.</p>}
    {data.run&&<>
-    <h4>Lote {data.run.id} · {data.run.status}</h4>
+    <h4>Lote {data.run.id} · {runLabel(data.run.status)}</h4>
     {/* Con alcance parcial el panel no muestra ningún número de resultados retirados: el
         servidor no lo envía, y contarlos aquí volvería a abrir el canal lateral. */}
     <p>{data.results_count} comprobante{data.results_count===1?'':'s'} revisado{data.results_count===1?'':'s'}{!data.scope_limited&&(data.withheld_results??0)>0?` · ${data.withheld_results} fuera de tu alcance`:''}</p>
@@ -43,7 +43,7 @@ export default function IvaPanel({periodId,onFile}:{periodId:number;onFile:(url:
     {data.stale_results.length>0&&<p role="status">{data.stale_results.length} resultado(s) dejaron de ser vigentes: vuelve a calcular. El estado histórico se conserva.</p>}
     {data.evidence_changed_documents.length>0&&<p role="alert">Archivo de la evidencia alterado o ausente en {data.evidence_changed_documents.length} comprobante(s): reingesta por el flujo existente y vuelve a calcular.</p>}
     {data.results.map(r=><article key={String(r.id)} className={s.card}>
-     <strong>Documento {r.document_id} · {vatResultText(r.snapshot_status,r.state,r.state_reason)}</strong>
+     <strong>{r.document_name||'Comprobante del periodo'} · {vatResultText(r.snapshot_status,r.state,r.state_reason)}</strong>
      <p>Proyección {r.projection_version}{r.state==='STALE'?` · estado histórico: ${label(STATUS,r.snapshot_status)}`:''} · en el periodo por: {r.claimed_by.join(', ')||'sin declarar'}</p>
      {r.differences.map((x,i)=><p key={i}>Diferencia observada · {String(x.code)} · {String(x.difference??'')}</p>)}
      {r.arithmetic.map((x,i)=><p key={'a'+i}>Observación aritmética (no es hallazgo) · base por tasa {String(x.base_por_tasa??'')} vs importe declarado {String(x.importe_declarado??'')}</p>)}

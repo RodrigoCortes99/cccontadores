@@ -1,5 +1,6 @@
 "use client";
 
+import {formErrorMessage} from '@/lib/formErrors';
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -301,7 +302,7 @@ export default function UsuariosPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setErrorForm(typeof data === "object" ? JSON.stringify(data) : "No fue posible guardar el usuario.");
+        setErrorForm(formErrorMessage(data, "No fue posible guardar el usuario."));
         return;
       }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import {formErrorMessage} from '@/lib/formErrors';
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import PageHeader from "../../../components/panel/PageHeader";
@@ -160,7 +161,7 @@ export default function EncargosPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setErrorForm(typeof data === "object" ? JSON.stringify(data) : "No fue posible crear el encargo.");
+        setErrorForm(formErrorMessage(data, "No fue posible crear el encargo."));
         return;
       }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import {formErrorMessage} from '@/lib/formErrors';
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -162,7 +163,7 @@ export default function EncargoDetallePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setErrorForm(typeof data === "object" ? JSON.stringify(data) : "No fue posible crear la solicitud PBC.");
+        setErrorForm(formErrorMessage(data, "No fue posible crear la solicitud PBC."));
         return;
       }
 

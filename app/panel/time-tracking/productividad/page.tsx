@@ -1,5 +1,6 @@
 "use client";
 
+import {formErrorMessage} from '@/lib/formErrors';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "../../../../components/panel/PageHeader";
@@ -165,7 +166,7 @@ export default function ProductividadPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(typeof data === "object" ? JSON.stringify(data) : "No fue posible guardar el perfil.");
+        setError(formErrorMessage(data, "No fue posible guardar el perfil."));
         return;
       }
 

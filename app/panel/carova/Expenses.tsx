@@ -1,5 +1,6 @@
 "use client";
 
+import {formErrorMessage} from '@/lib/formErrors';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch, apiForm, apiJson } from '../../../lib/api';
 import { errorText, locationLabel, stateLabel } from './presentation';
@@ -17,7 +18,7 @@ type ResponseData = { job: Job | null; jobs: Job[]; count: number; has_next: boo
 const kindLabels: Record<string, string> = { POLIZA:'Póliza', CFDI_XML:'CFDI XML', CFDI_PDF:'CFDI PDF', COMPROBANTE_PAGO:'Comprobante de pago', ESTADO_CUENTA:'Estado de cuenta', AUXILIAR:'Auxiliar', FACTURA:'Factura', RECIBO:'Recibo', SOPORTE:'Soporte', DESCONOCIDO:'Desconocido' };
 async function read<T>(response: Response): Promise<T> {
   const data = await response.json();
-  if (!response.ok) throw new Error(`${response.status}: ${JSON.stringify(data)}`);
+  if (!response.ok) throw new Error(formErrorMessage(data));
   return data as T;
 }
 const amount = (value: string | null) => value === null ? 'Sin dato' : value;
