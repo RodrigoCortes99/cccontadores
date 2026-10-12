@@ -1,7 +1,6 @@
-import type { NextConfig } from "next";
-
 const realModelDemo = process.env.CAROVA_REAL_MODEL_DEMO === 'true';
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   ...(process.env.ACCOUNTING_OS_HARDENING_LAB === 'true' && process.env.ACCOUNTING_OS_HARDENING_TSC_CONFIG ? {typescript: {tsconfigPath: process.env.ACCOUNTING_OS_HARDENING_TSC_CONFIG}} : {}),
   // The isolated lab must never inherit a production URL from .env.local.
   ...(realModelDemo ? {env: {NEXT_PUBLIC_API_URL: 'http://127.0.0.1:8012'}} : {}),
